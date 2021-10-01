@@ -1,0 +1,10 @@
+mutation VerifyIdentityDocument($input: VerifyIdentityDocumentInput!) {
+  verifyIdentityDocument(input: $input) {
+    owner
+    verified
+    verifiedAtEpochMs
+    verificationMethod
+    canAttemptVerificationAgain
+    requiredVerificationMethod
+  }
+}

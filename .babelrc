@@ -1,0 +1,19 @@
+{
+  "presets": [
+    [
+     "@babel/preset-env",
+      {
+        "targets": {
+          "browsers": ["defaults", "not IE 11"],
+          "node": "12.20"
+        },
+        "useBuiltIns": "usage",
+        "corejs": 3
+      }    ],
+    "@babel/preset-typescript"
+  ],
+  "plugins": [
+    "@babel/plugin-proposal-private-methods",
+    "@babel/plugin-proposal-class-properties"
+  ]
+}

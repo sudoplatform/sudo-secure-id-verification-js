@@ -1,0 +1,11 @@
+query CheckIdentityVerification {
+  checkIdentityVerification {
+    owner
+    verified
+    verifiedAtEpochMs
+    verificationMethod
+    canAttemptVerificationAgain
+    idScanUrl
+    requiredVerificationMethod
+  }
+}

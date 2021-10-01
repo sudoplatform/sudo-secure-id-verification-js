@@ -1,0 +1,43 @@
+type VerifiedIdentity {
+  owner: String!
+  verified: Boolean!
+  verifiedAtEpochMs: Float
+  verificationMethod: String!
+  canAttemptVerificationAgain: Boolean!
+  idScanUrl: String
+  requiredVerificationMethod: String
+}
+
+input VerifyIdentityInput {
+  verificationMethod: String = "KNOWLEDGE_OF_PII"
+  firstName: String!
+  lastName: String!
+  address: String!
+  city: String
+  state: String
+  postalCode: String!
+  country: String!
+  dateOfBirth: String!
+}
+
+input VerifyIdentityDocumentInput {
+  verificationMethod: String = "GOVERNMENT_ID"
+  imageBase64: String!
+  backImageBase64: String!
+  country: String!
+  documentType: String!
+}
+
+type SupportedCountries {
+  countryList: [String!]!
+}
+
+type Mutation {
+  verifyIdentity(input: VerifyIdentityInput): VerifiedIdentity
+  verifyIdentityDocument(input: VerifyIdentityDocumentInput): VerifiedIdentity
+}
+
+type Query {
+  checkIdentityVerification: VerifiedIdentity
+  getSupportedCountriesForIdentityVerification: SupportedCountries
+}
