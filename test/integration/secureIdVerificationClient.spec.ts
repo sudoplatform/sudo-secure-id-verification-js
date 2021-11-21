@@ -22,6 +22,18 @@ import * as SimulatorDocuments from '../data/simulatorIdDocuments'
 global.fetch = require('node-fetch')
 global.crypto = require('isomorphic-webcrypto')
 
+if (typeof btoa === 'undefined') {
+  global.btoa = function (b) {
+    return Buffer.from(b, 'binary').toString('base64')
+  }
+}
+
+if (typeof atob === 'undefined') {
+  global.atob = function (a) {
+    return Buffer.from(a, 'base64').toString('binary')
+  }
+}
+
 describe('SudoSecureIdVerificationClient', () => {
   const configFilePath = 'config/sudoplatformconfig.json'
   const testKeyPath = 'config/register_key.private'
