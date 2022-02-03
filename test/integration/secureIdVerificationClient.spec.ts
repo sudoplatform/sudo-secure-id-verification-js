@@ -5,6 +5,8 @@
  */
 import { DefaultConfigurationManager } from '@sudoplatform/sudo-common'
 import { DefaultSudoUserClient } from '@sudoplatform/sudo-user'
+import { DefaultSudoEntitlementsClient } from '@sudoplatform/sudo-entitlements'
+import { DefaultSudoEntitlementsAdminClient } from '@sudoplatform/sudo-entitlements-admin'
 import { DefaultApiClientManager } from '@sudoplatform/sudo-api-client'
 import {
   DefaultSudoSecureIdVerificationClient,
@@ -44,6 +46,8 @@ describe('SudoSecureIdVerificationClient', () => {
     existsSync(testKeyPath) &&
     existsSync(testKeyIdPath)
   ) {
+    const verifyIdentityUserEntitledName =
+      'sudoplatform.identity-verification.verifyIdentityUserEntitled'
     const config = readFileSync(configFilePath, 'utf8')
     const testKey = readFileSync(testKeyPath, 'ascii').trim()
     const testKeyId = readFileSync(testKeyIdPath, 'ascii').trim()
@@ -57,11 +61,16 @@ describe('SudoSecureIdVerificationClient', () => {
 
     const sudoUserClient = new DefaultSudoUserClient()
     DefaultApiClientManager.getInstance().setAuthClient(sudoUserClient)
-
+    const sudoEntitlementsClient = new DefaultSudoEntitlementsClient(
+      sudoUserClient,
+    )
+    const sudoEntitlementsAdminClient = new DefaultSudoEntitlementsAdminClient(
+      process.env.ADMIN_API_KEY || 'IAM',
+    )
     const client = new DefaultSudoSecureIdVerificationClient({ sudoUserClient })
 
     /**
-     * New user for each test, so we can exercise different verification scenariois.
+     * New user for each test, so we can exercise different verification scenarios.
      */
     beforeEach(async (): Promise<void> => {
       await sudoUserClient.registerWithAuthenticationProvider(
@@ -69,10 +78,17 @@ describe('SudoSecureIdVerificationClient', () => {
         v4(),
       )
       await sudoUserClient.signInWithKey()
+
+      const externalId = await sudoEntitlementsClient.getExternalId()
+      await sudoEntitlementsAdminClient.applyEntitlementsToUser(externalId, [
+        { name: verifyIdentityUserEntitledName, value: 1 },
+      ])
+      await sudoEntitlementsClient.redeemEntitlements()
+
       await expect(sudoUserClient.isSignedIn()).resolves.toEqual(true)
       await client.reset()
       await expect(sudoUserClient.isSignedIn()).resolves.toEqual(true)
-    }, 15000)
+    }, 30000)
 
     afterEach(async (): Promise<void> => {
       await sudoUserClient.deregister()

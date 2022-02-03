@@ -13,3 +13,4 @@ src/gen
 sampleapp/.npmrc
 .dccache
 coverage/
+yalc-store/
