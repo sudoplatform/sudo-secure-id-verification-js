@@ -42,7 +42,6 @@
     "fp-ts": "^2.11.8",
     "graphql": "^15.8.0",
     "io-ts": "^2.2.16",
-    "node-fetch": "^2.6.7",
     "ws": "^8.4.2"
   },
   "devDependencies": {
@@ -88,7 +87,6 @@
     "apollo-link": "^1.2.14",
     "apollo-link-http": "^1.5.17",
     "aws-appsync": "4.0.3",
-    "node-fetch": "^2.6.7",
     "graphql": "^15.8.0",
     "ws": "^8.4.2"
   },
