@@ -1,0 +1,36 @@
+import {
+  AppSyncError,
+  mapGraphQLToClientError,
+  VersionMismatchError,
+} from '@sudoplatform/sudo-common'
+import {
+  IdentityVerificationRecordNotFoundError,
+  IdentityVerificationUpdateFailedError,
+  ImplausibleAgeError,
+  InvalidAgeError,
+  UnsupportedCountryError,
+  UnsupportedVerificationMethodError,
+} from '../..'
+
+export class ErrorTransformer {
+  static toClientError(error: AppSyncError): Error {
+    switch (error.errorType) {
+      case 'DynamoDB:ConditionalCheckFailedException':
+        return new VersionMismatchError()
+      case 'sudoplatform.identity-verification.IdentityVerificationRecordNotFoundError':
+        return new IdentityVerificationRecordNotFoundError(error.message)
+      case 'sudoplatform.identity-verification.IdentityVerificationUpdateFailedError':
+        return new IdentityVerificationUpdateFailedError(error.message)
+      case 'sudoplatform.identity-verification.UnsupportedVerificationMethodError':
+        return new UnsupportedVerificationMethodError(error.message)
+      case 'sudoplatform.identity-verification.ImplausibleAgeError':
+        return new ImplausibleAgeError(error.message)
+      case 'sudoplatform.identity-verification.InvalidAgeError':
+        return new InvalidAgeError(error.message)
+      case 'sudoplatform.identity-verification.UnsupportedCurrencyError':
+        return new UnsupportedCountryError(error.message)
+      default:
+        return mapGraphQLToClientError(error)
+    }
+  }
+}

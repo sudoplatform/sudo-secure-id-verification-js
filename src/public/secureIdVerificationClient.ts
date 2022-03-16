@@ -55,8 +55,8 @@ export interface SudoSecureIdVerificationClient {
    * @param {QueryOption} queryOption Control for using local cache or make a network call
    *
    * @throws {@link NotSignedInError}
-   * @throws {@link UnknownGraphQLError}
    * @throws {@link ServiceError}
+   * @throws {@link UnknownGraphQLError}
    * @throws {@link FatalError}
    */
   checkIdentityVerification(
@@ -71,8 +71,12 @@ export interface SudoSecureIdVerificationClient {
    * @returns Verified identity results.
    *
    * @throws {@link NotSignedInError}
-   * @throws {@link UnknownGraphQLError}
+   * @throws {@link ImplausibleAgeError}
+   * @throws {@link InvalidAgeError}
+   * @throws {@link UnsupportedVerificationMethodError}
+   * @throws {@link UnsupportedCountryError}
    * @throws {@link ServiceError}
+   * @throws {@link UnknownGraphQLError}
    * @throws {@link FatalError}
    */
   verifyIdentity(pii: VerifyIdentityInput): Promise<VerifiedIdentity>
@@ -85,8 +89,12 @@ export interface SudoSecureIdVerificationClient {
    * @param {VerifyIdentityDocumentInput} idDocumentInfo Identity document information
    *
    * @throws {@link NotSignedInError}
-   * @throws {@link UnknownGraphQLError}
+   * @throws {@link ImplausibleAgeError}
+   * @throws {@link InvalidAgeError}
+   * @throws {@link UnsupportedVerificationMethodError}
+   * @throws {@link UnsupportedCountryError}
    * @throws {@link ServiceError}
+   * @throws {@link UnknownGraphQLError}
    * @throws {@link FatalError}
    */
   verifyIdentityDocument(

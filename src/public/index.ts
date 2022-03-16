@@ -6,3 +6,5 @@ export {
 } from './secureIdVerificationClient'
 
 export { IdDocument } from './idDocument'
+
+export * from './errors'

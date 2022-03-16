@@ -92,7 +92,7 @@
   },
   "peerDependencies": {
     "@sudoplatform/sudo-api-client": "^9.0.1",
-    "@sudoplatform/sudo-common": "^6.0.0",
-    "@sudoplatform/sudo-user": "^10.0.0"
+    "@sudoplatform/sudo-common": "^6.1.0",
+    "@sudoplatform/sudo-user": "^10.0.1"
   }
 }

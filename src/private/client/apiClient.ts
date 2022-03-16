@@ -1,31 +1,27 @@
 import {
-  FatalError,
-  AppSyncError,
-  UnknownGraphQLError,
-  ServiceError,
-} from '@sudoplatform/sudo-common'
-import {
   ApiClientManager,
   DefaultApiClientManager,
 } from '@sudoplatform/sudo-api-client'
+import { FatalError, UnknownGraphQLError } from '@sudoplatform/sudo-common'
 import { NormalizedCacheObject } from 'apollo-cache-inmemory'
+import { ApolloError } from 'apollo-client'
 import { AWSAppSyncClient } from 'aws-appsync'
 import {
-  SupportedCountries,
-  GetSupportedCountriesForIdentityVerificationQuery,
-  GetSupportedCountriesForIdentityVerificationDocument,
-  VerifiedIdentity,
-  CheckIdentityVerificationQuery,
   CheckIdentityVerificationDocument,
-  VerifyIdentityInput,
+  CheckIdentityVerificationQuery,
+  GetSupportedCountriesForIdentityVerificationDocument,
+  GetSupportedCountriesForIdentityVerificationQuery,
+  SupportedCountries,
+  VerifiedIdentity,
   VerifyIdentityDocument,
-  VerifyIdentityMutation,
-  VerifyIdentityDocumentInput,
   VerifyIdentityDocumentDocument,
+  VerifyIdentityDocumentInput,
   VerifyIdentityDocumentMutation,
+  VerifyIdentityInput,
+  VerifyIdentityMutation,
 } from '../../gen/graphql-types'
 import { QueryOption } from '../../public/types'
-import { ApolloError } from 'apollo-client'
+import { ErrorTransformer } from '../transformers/errorTransformer'
 
 /**
  * AppSync wrapper to use to invoke Sudo Secure ID Verification Service APIs.
@@ -56,7 +52,7 @@ export class ApiClient {
       const apolloError = err as ApolloError
       const error = apolloError.graphQLErrors?.[0]
       if (error) {
-        throw this.graphQLErrorsToClientError(error)
+        throw ErrorTransformer.toClientError(error)
       } else {
         throw new UnknownGraphQLError(error)
       }
@@ -64,7 +60,7 @@ export class ApiClient {
 
     const error = result.errors?.[0]
     if (error) {
-      throw this.graphQLErrorsToClientError(error)
+      throw ErrorTransformer.toClientError(error)
     }
 
     if (
@@ -89,7 +85,7 @@ export class ApiClient {
       const apolloError = err as ApolloError
       const error = apolloError.graphQLErrors?.[0]
       if (error) {
-        throw this.graphQLErrorsToClientError(error)
+        throw ErrorTransformer.toClientError(error)
       } else {
         throw new UnknownGraphQLError(error)
       }
@@ -97,7 +93,7 @@ export class ApiClient {
 
     const error = result.errors?.[0]
     if (error) {
-      throw this.graphQLErrorsToClientError(error)
+      throw ErrorTransformer.toClientError(error)
     }
 
     if (result.data?.checkIdentityVerification) {
@@ -121,7 +117,7 @@ export class ApiClient {
       const apolloError = err as ApolloError
       const error = apolloError.graphQLErrors?.[0]
       if (error) {
-        throw this.graphQLErrorsToClientError(error)
+        throw ErrorTransformer.toClientError(error)
       } else {
         throw new UnknownGraphQLError(error)
       }
@@ -129,7 +125,7 @@ export class ApiClient {
 
     const error = result.errors?.[0]
     if (error) {
-      throw this.graphQLErrorsToClientError(error)
+      throw ErrorTransformer.toClientError(error)
     }
 
     if (result.data?.verifyIdentity) {
@@ -153,7 +149,7 @@ export class ApiClient {
       const apolloError = err as ApolloError
       const error = apolloError.graphQLErrors?.[0]
       if (error) {
-        throw this.graphQLErrorsToClientError(error)
+        throw ErrorTransformer.toClientError(error)
       } else {
         throw new UnknownGraphQLError(error)
       }
@@ -161,7 +157,7 @@ export class ApiClient {
 
     const error = result.errors?.[0]
     if (error) {
-      throw this.graphQLErrorsToClientError(error)
+      throw ErrorTransformer.toClientError(error)
     }
 
     if (result.data?.verifyIdentityDocument) {
@@ -173,13 +169,5 @@ export class ApiClient {
 
   public async reset(): Promise<void> {
     await this._client.clearStore()
-  }
-
-  private graphQLErrorsToClientError(error: AppSyncError): Error {
-    if (error.errorType === 'sudoplatform.ServiceError') {
-      return new ServiceError(error.message)
-    } else {
-      return new UnknownGraphQLError(error)
-    }
   }
 }
