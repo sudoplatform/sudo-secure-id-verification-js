@@ -9,7 +9,6 @@ scratch
 yarn-error.log
 sampleapp/build
 .DS_Store
-src/gen
 sampleapp/.npmrc
 .dccache
 coverage/
