@@ -21,8 +21,9 @@ import { TESTAuthenticationProvider } from '@sudoplatform/sudo-user/lib/user/aut
 import * as SimulatorPII from '../data/simulatorPII'
 import * as SimulatorDocuments from '../data/simulatorIdDocuments'
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires,@typescript-eslint/no-unsafe-member-access
+global.crypto = require('crypto').webcrypto
 global.fetch = require('node-fetch')
-global.crypto = require('isomorphic-webcrypto')
 
 if (typeof btoa === 'undefined') {
   global.btoa = function (b) {
