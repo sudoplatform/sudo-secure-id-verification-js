@@ -8,7 +8,7 @@ import { SudoUserClient } from '@sudoplatform/sudo-user'
  *     SudoUserClient to use. No default.
  *
  * @property {Logger} logger
- *     Logger to use. Default: a new {@link DefaultLogger} is construted and used.
+ *     Logger to use. Default: a new DefaultLogger is constructed and used.
  */
 export interface SudoSecureIdVerificationClientOptions {
   sudoUserClient: SudoUserClient

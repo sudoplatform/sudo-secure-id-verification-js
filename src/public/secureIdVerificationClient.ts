@@ -24,7 +24,7 @@ import { QueryOption } from './types/queryOption'
 import { SudoSecureIdVerificationClientOptions } from './types/sudoIdentityVerificationClientOptions'
 
 /**
- * Client interface for accessinmg Secure ID Verification service.
+ * Client interface for accessing Secure ID Verification service.
  */
 export interface SudoSecureIdVerificationClient {
   /**
@@ -40,10 +40,10 @@ export interface SudoSecureIdVerificationClient {
    *
    * @param {QueryOption} queryOption Control for using local cache or make a network call
    *
-   * @throws {@link NotSignedInError}
-   * @throws {@link UnknownGraphQLError}
-   * @throws {@link ServiceError}
-   * @throws {@link FatalError}
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
    */
   listSupportedCountries(queryOption?: QueryOption): Promise<string[]>
 
@@ -54,10 +54,10 @@ export interface SudoSecureIdVerificationClient {
    *
    * @param {QueryOption} queryOption Control for using local cache or make a network call
    *
-   * @throws {@link NotSignedInError}
-   * @throws {@link ServiceError}
-   * @throws {@link UnknownGraphQLError}
-   * @throws {@link FatalError}
+   * @throws NotSignedInError
+   * @throws ServiceError
+   * @throws UnknownGraphQLError
+   * @throws FatalError
    */
   checkIdentityVerification(
     queryOption?: QueryOption,
@@ -70,14 +70,14 @@ export interface SudoSecureIdVerificationClient {
    *
    * @returns Verified identity results.
    *
-   * @throws {@link NotSignedInError}
+   * @throws NotSignedInError
    * @throws {@link ImplausibleAgeError}
    * @throws {@link InvalidAgeError}
    * @throws {@link UnsupportedVerificationMethodError}
    * @throws {@link UnsupportedCountryError}
-   * @throws {@link ServiceError}
-   * @throws {@link UnknownGraphQLError}
-   * @throws {@link FatalError}
+   * @throws ServiceError
+   * @throws UnknownGraphQLError
+   * @throws FatalError
    */
   verifyIdentity(pii: VerifyIdentityInput): Promise<VerifiedIdentity>
 
@@ -88,14 +88,14 @@ export interface SudoSecureIdVerificationClient {
    *
    * @param {VerifyIdentityDocumentInput} idDocumentInfo Identity document information
    *
-   * @throws {@link NotSignedInError}
+   * @throws NotSignedInError
    * @throws {@link ImplausibleAgeError}
    * @throws {@link InvalidAgeError}
    * @throws {@link UnsupportedVerificationMethodError}
    * @throws {@link UnsupportedCountryError}
-   * @throws {@link ServiceError}
-   * @throws {@link UnknownGraphQLError}
-   * @throws {@link FatalError}
+   * @throws ServiceError
+   * @throws UnknownGraphQLError
+   * @throws FatalError
    */
   verifyIdentityDocument(
     idDocumentInfo: VerifyIdentityDocumentInput,
@@ -120,8 +120,8 @@ export class DefaultSudoSecureIdVerificationClient
    * @param {Logger} options.logger Existing logger. If not specified, a new one is constructed.
    * @param {ApiClient} options.apiClient Undocumented
    *
-   * @throws {@link ConfigurationSetNotFoundError}
-   *     If identity verification serivce is not configured in the environment
+   * @throws ConfigurationSetNotFoundError
+   *     If identity verification service is not configured in the environment
    */
   constructor(options: SudoSecureIdVerificationClientOptions) {
     this.sudoUserClient = options.sudoUserClient
@@ -151,10 +151,10 @@ export class DefaultSudoSecureIdVerificationClient
    *
    * @returns List of ISO 3166-1 alpha-2 country codes.
    *
-   * @throws {@link NotSignedInError}
-   * @throws {@link UnknownGraphQLError}
-   * @throws {@link ServiceError}
-   * @throws {@link FatalError}
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
    */
   async listSupportedCountries(queryOption?: QueryOption): Promise<string[]> {
     if (!(await this.sudoUserClient.isSignedIn())) {
@@ -173,10 +173,10 @@ export class DefaultSudoSecureIdVerificationClient
    *
    * @returns Verified identity results.
    *
-   * @throws {@link NotSignedInError}
-   * @throws {@link UnknownGraphQLError}
-   * @throws {@link ServiceError}
-   * @throws {@link FatalError}
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
    */
   async checkIdentityVerification(
     queryOption?: QueryOption,
@@ -202,10 +202,10 @@ export class DefaultSudoSecureIdVerificationClient
    *
    * @returns Verified identity results.
    *
-   * @throws {@link NotSignedInError}
-   * @throws {@link UnknownGraphQLError}
-   * @throws {@link ServiceError}
-   * @throws {@link FatalError}
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
    */
   async verifyIdentity(pii: VerifyIdentityInput): Promise<VerifiedIdentity> {
     if (!(await this.sudoUserClient.isSignedIn())) {
@@ -238,11 +238,11 @@ export class DefaultSudoSecureIdVerificationClient
    *     Identity document information. The verificationMethod property must
    *     be absent or set to {@link VerificationMethod.GovernmentID}
    *
-   * @throws {@link NotSignedInError}
-   * @throws {@link IllegalArgumentError}
-   * @throws {@link UnknownGraphQLError}
-   * @throws {@link ServiceError}
-   * @throws {@link FatalError}
+   * @throws NotSignedInError
+   * @throws IllegalArgumentError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
    */
   async verifyIdentityDocument(
     idDocumentInfo: VerifyIdentityDocumentInput,
