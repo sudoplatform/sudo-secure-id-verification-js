@@ -17,7 +17,7 @@ export const VALID_PASSPORT: IdDocumentInfo = {
   country: 'US',
   documentType: 'passport',
   frontImagePath:
-    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/passport-front-success.jpg',
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/passport-success.jpg',
   backImagePath:
-    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/passport-back-success.jpg',
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/passport-success.jpg',
 }
