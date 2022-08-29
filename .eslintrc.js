@@ -9,7 +9,8 @@ module.exports = {
     },
     {
       files: ['src/**/*.ts', '!src/**/*.spec.ts'],
-      plugins: ['@typescript-eslint', 'import'],
+      excludedFiles: ['**/*.spec.ts'],
+      plugins: ['@typescript-eslint', 'import', 'prettier', 'tree-shaking'],
       parser: '@typescript-eslint/parser',
       parserOptions: {
         project: './tsconfig.json',
@@ -34,6 +35,7 @@ module.exports = {
             allowTypedFunctionExpressions: true,
           },
         ],
+        'tree-shaking/no-side-effects-in-initialization': 2,
       },
     },
     {

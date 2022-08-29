@@ -1,13 +1,14 @@
 import { DefaultConfigurationManager } from '@sudoplatform/sudo-common'
-import { type, TypeOf } from 'io-ts'
+import * as t from 'io-ts'
 
 const IdentityVerificationServiceConfigProps = {}
 
-const IdentityVerificationServiceConfigCodec = type(
+// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
+const IdentityVerificationServiceConfigCodec = t.type(
   IdentityVerificationServiceConfigProps,
 )
 
-export type IdentityVerificationServiceConfig = TypeOf<
+export type IdentityVerificationServiceConfig = t.TypeOf<
   typeof IdentityVerificationServiceConfigCodec
 >
 

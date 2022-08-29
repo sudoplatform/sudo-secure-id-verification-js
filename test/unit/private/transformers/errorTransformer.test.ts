@@ -16,6 +16,7 @@ import { ErrorTransformer } from '../../../../src/private/transformers/errorTran
 
 class InstanceUnderTest extends ErrorTransformer {}
 
+// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 describe('Error Transformer Test Suite', () => {
   const errorMsg = v4()
 

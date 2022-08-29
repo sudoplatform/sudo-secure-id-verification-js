@@ -1,9 +1,10 @@
 {
   "projects": [
     {
+      "preset": "ts-jest",
       "displayName": "jsdom",
       "testEnvironment": "jsdom",
-      "testMatch": ["<rootDir>/test/unit/**/*.spec.ts"],
+      "testMatch": ["<rootDir>/test/**/*.spec.ts"],
       "testPathIgnorePatterns": ["/node_modules/", "/lib/"],
       "clearMocks": true,
       "collectCoverageFrom": ["src/**/*.ts", "!**/*.d.ts", "!node_modules/**"],
@@ -16,23 +17,10 @@
           "functions": 90,
           "lines": 90
         }
-      }
-    },
-    {
-      "displayName": "node",
-      "testEnvironment": "node",
-      "testMatch": ["<rootDir>/test/integration/**/*.spec.ts"],
-      "testPathIgnorePatterns": ["/node_modules/", "/lib/"],
-      "clearMocks": true,
-      "collectCoverageFrom": ["src/**/*.ts", "!**/*.d.ts", "!node_modules/**"],
-      "coverageReporters": ["text", "json-summary"],
-      "coverageDirectory": "<rootDir>/build/coverage",
-      "coverageThreshold": {
-        "global": {
-          "statements": 90,
-          "branches": 0,
-          "functions": 90,
-          "lines": 90
+      },
+      "globals": {
+        "ts-jest": {
+          "tsconfig": "tsconfig.commonjs.json"
         }
       }
     }

@@ -3,11 +3,17 @@
  * simulator. Some tests may not pass when run against an IDV instance using IDology in sandbox
  * mode, and all tests will likely fail against an IDV instance in production mode.
  */
+import { DefaultApiClientManager } from '@sudoplatform/sudo-api-client'
 import { DefaultConfigurationManager } from '@sudoplatform/sudo-common'
-import { DefaultSudoUserClient } from '@sudoplatform/sudo-user'
 import { DefaultSudoEntitlementsClient } from '@sudoplatform/sudo-entitlements'
 import { DefaultSudoEntitlementsAdminClient } from '@sudoplatform/sudo-entitlements-admin'
-import { DefaultApiClientManager } from '@sudoplatform/sudo-api-client'
+import {
+  DefaultSudoUserClient,
+  TESTAuthenticationProvider,
+} from '@sudoplatform/sudo-user'
+import { existsSync, readFileSync } from 'fs'
+import { TextDecoder, TextEncoder } from 'util'
+import { v4 } from 'uuid'
 import {
   DefaultSudoSecureIdVerificationClient,
   IdDocument,
@@ -15,11 +21,11 @@ import {
   VerificationMethod,
   VerifiedIdentity,
 } from '../../src'
-import { readFileSync, existsSync } from 'fs'
-import { v4 } from 'uuid'
-import { TESTAuthenticationProvider } from '@sudoplatform/sudo-user/lib/user/auth-provider'
-import * as SimulatorPII from '../data/simulatorPII'
 import * as SimulatorDocuments from '../data/simulatorIdDocuments'
+import * as SimulatorPII from '../data/simulatorPII'
+
+global.TextEncoder = TextEncoder
+global.TextDecoder = TextDecoder as typeof global.TextDecoder
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires,@typescript-eslint/no-unsafe-member-access
 global.crypto = require('crypto').webcrypto
@@ -73,7 +79,7 @@ describe('SudoSecureIdVerificationClient', () => {
     /**
      * New user for each test, so we can exercise different verification scenarios.
      */
-    beforeEach(async (): Promise<void> => {
+    beforeEach(async () => {
       await sudoUserClient.registerWithAuthenticationProvider(
         testAuthenticationProvider,
         v4(),
@@ -91,7 +97,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(sudoUserClient.isSignedIn()).resolves.toEqual(true)
     }, 30000)
 
-    afterEach(async (): Promise<void> => {
+    afterEach(async () => {
       await sudoUserClient.deregister()
     }, 15000)
 
@@ -130,7 +136,7 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(verifiedIdentity.requiredVerificationMethod).toEqual(
         VerificationMethod.KnowledgeOfPII,
       )
-      expect(verifiedIdentity.verifiedAt.getTime()).toBeGreaterThan(0)
+      expect(verifiedIdentity.verifiedAt?.getTime()).toBeGreaterThan(0)
     }
 
     async function validateIdDocumentVerifiedResponse(
@@ -144,7 +150,7 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(verifiedIdentity.verificationMethod).toEqual(
         VerificationMethod.GovernmentID,
       )
-      expect(verifiedIdentity.verifiedAt.getTime()).toBeGreaterThan(0)
+      expect(verifiedIdentity.verifiedAt?.getTime()).toBeGreaterThan(0)
       expect(verifiedIdentity.requiredVerificationMethod).toBe(
         VerificationMethod.GovernmentID,
       )
@@ -168,9 +174,9 @@ describe('SudoSecureIdVerificationClient', () => {
     it('list supported countries - cache empty', async () => {
       try {
         await client.listSupportedCountries(QueryOption.CACHE_ONLY)
-      } catch (err) {
-        expect(err.name).toBe('FatalError')
-        //console.log(JSON.stringify(err.name))
+      } catch (err: unknown) {
+        const error = err as Error
+        expect(error.name).toBe('FatalError')
       }
     }, 20000)
 
@@ -246,8 +252,8 @@ describe('SudoSecureIdVerificationClient', () => {
 
       verifiedIdentity = await client.verifyIdentity(
         Object.assign({}, SimulatorPII.VALID_IDENTITY, {
-          city: null,
-          state: null,
+          city: undefined,
+          state: undefined,
         }),
       )
       await validatePiiVerifiedResponse(verifiedIdentity)
