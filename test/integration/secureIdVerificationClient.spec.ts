@@ -99,7 +99,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
     afterEach(async () => {
       await sudoUserClient.deregister()
-    }, 15000)
+    }, 20000)
 
     /**
      * Helpers
@@ -351,9 +351,9 @@ describe('SudoSecureIdVerificationClient', () => {
       // verification using id document must be on top of an attempt
       // using PII
       verifiedIdentity = await client.verifyIdentity(
-        SimulatorPII.INVALID_IDENTITY,
+        SimulatorPII.VALID_IDENTITY,
       )
-      await validateUnverifiedResponse(verifiedIdentity)
+      await validatePiiVerifiedResponse(verifiedIdentity)
 
       const idDocument = await IdDocument.buildDocumentVerificationRequest(
         SimulatorDocuments.VALID_PASSPORT,

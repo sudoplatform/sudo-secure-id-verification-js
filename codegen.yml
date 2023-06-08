@@ -19,3 +19,6 @@ hooks:
 config:
   scalars:
     AWSJSON: unknown
+    ID:
+      input: string
+      output: string
