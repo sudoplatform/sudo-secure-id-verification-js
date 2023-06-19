@@ -1,3 +1,9 @@
+/*
+ * Copyright © 2023 Anonyome Labs, Inc. All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /**
  * These tests currently assume execution against an IDV instance using the Platform internal
  * simulator. Some tests may not pass when run against an IDV instance using IDology in sandbox

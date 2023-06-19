@@ -12,22 +12,31 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
   [SubKey in K]: Maybe<T[SubKey]>
 }
+export type MakeEmpty<
+  T extends { [key: string]: unknown },
+  K extends keyof T,
+> = { [_ in K]?: never }
+export type Incremental<T> =
+  | T
+  | {
+      [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never
+    }
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string
-  String: string
-  Boolean: boolean
-  Int: number
-  Float: number
-  AWSDate: any
-  AWSDateTime: any
-  AWSEmail: any
-  AWSIPAddress: any
-  AWSJSON: unknown
-  AWSPhone: any
-  AWSTime: any
-  AWSTimestamp: any
-  AWSURL: any
+  ID: { input: string | number; output: string }
+  String: { input: string; output: string }
+  Boolean: { input: boolean; output: boolean }
+  Int: { input: number; output: number }
+  Float: { input: number; output: number }
+  AWSDate: { input: any; output: any }
+  AWSDateTime: { input: any; output: any }
+  AWSEmail: { input: any; output: any }
+  AWSIPAddress: { input: any; output: any }
+  AWSJSON: { input: unknown; output: unknown }
+  AWSPhone: { input: any; output: any }
+  AWSTime: { input: any; output: any }
+  AWSTimestamp: { input: any; output: any }
+  AWSURL: { input: any; output: any }
 }
 
 export type Mutation = {
@@ -52,38 +61,38 @@ export type Query = {
 
 export type SupportedCountries = {
   __typename?: 'SupportedCountries'
-  countryList: Array<Scalars['String']>
+  countryList: Array<Scalars['String']['output']>
 }
 
 export type VerifiedIdentity = {
   __typename?: 'VerifiedIdentity'
-  canAttemptVerificationAgain: Scalars['Boolean']
-  idScanUrl?: Maybe<Scalars['String']>
-  owner: Scalars['String']
-  requiredVerificationMethod?: Maybe<Scalars['String']>
-  verificationMethod: Scalars['String']
-  verified: Scalars['Boolean']
-  verifiedAtEpochMs?: Maybe<Scalars['Float']>
+  canAttemptVerificationAgain: Scalars['Boolean']['output']
+  idScanUrl?: Maybe<Scalars['String']['output']>
+  owner: Scalars['String']['output']
+  requiredVerificationMethod?: Maybe<Scalars['String']['output']>
+  verificationMethod: Scalars['String']['output']
+  verified: Scalars['Boolean']['output']
+  verifiedAtEpochMs?: Maybe<Scalars['Float']['output']>
 }
 
 export type VerifyIdentityDocumentInput = {
-  backImageBase64: Scalars['String']
-  country: Scalars['String']
-  documentType: Scalars['String']
-  imageBase64: Scalars['String']
-  verificationMethod?: InputMaybe<Scalars['String']>
+  backImageBase64: Scalars['String']['input']
+  country: Scalars['String']['input']
+  documentType: Scalars['String']['input']
+  imageBase64: Scalars['String']['input']
+  verificationMethod?: InputMaybe<Scalars['String']['input']>
 }
 
 export type VerifyIdentityInput = {
-  address: Scalars['String']
-  city?: InputMaybe<Scalars['String']>
-  country: Scalars['String']
-  dateOfBirth: Scalars['String']
-  firstName: Scalars['String']
-  lastName: Scalars['String']
-  postalCode: Scalars['String']
-  state?: InputMaybe<Scalars['String']>
-  verificationMethod?: InputMaybe<Scalars['String']>
+  address: Scalars['String']['input']
+  city?: InputMaybe<Scalars['String']['input']>
+  country: Scalars['String']['input']
+  dateOfBirth: Scalars['String']['input']
+  firstName: Scalars['String']['input']
+  lastName: Scalars['String']['input']
+  postalCode: Scalars['String']['input']
+  state?: InputMaybe<Scalars['String']['input']>
+  verificationMethod?: InputMaybe<Scalars['String']['input']>
 }
 
 export type CheckIdentityVerificationQueryVariables = Exact<{

@@ -1,3 +1,9 @@
+/*
+ * Copyright © 2023 Anonyome Labs, Inc. All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { VerifyIdentityInput as VerifyIdentityInputEntity } from '../../public/types'
 import { VerifyIdentityInput as VerifyIdentityInputGraphQL } from '../../gen/graphql-types'
 import { VerificationMethodTransformer } from './verificationMethodTransformer'

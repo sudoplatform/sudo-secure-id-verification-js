@@ -102,5 +102,8 @@
     "@sudoplatform/sudo-api-client": "^14.0.0",
     "@sudoplatform/sudo-common": "^8.3.1",
     "@sudoplatform/sudo-user": "^13.0.0"
+  },
+  "auditSuppressions": {
+    "1092278": 1688346116
   }
 }
