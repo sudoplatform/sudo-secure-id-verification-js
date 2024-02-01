@@ -168,9 +168,8 @@ export class DefaultSudoSecureIdVerificationClient
     }
 
     this.logger.info('Listing supported countries for identity verification')
-    const supportedCountries = await this.apiClient.listSupportedCountries(
-      queryOption,
-    )
+    const supportedCountries =
+      await this.apiClient.listSupportedCountries(queryOption)
     return supportedCountries.countryList
   }
 
@@ -192,9 +191,8 @@ export class DefaultSudoSecureIdVerificationClient
     }
 
     this.logger.info('Retrieving current identity verification status')
-    const verifiedIdentity = await this.apiClient.checkIdentityVerification(
-      queryOption,
-    )
+    const verifiedIdentity =
+      await this.apiClient.checkIdentityVerification(queryOption)
     return VerifiedIdentityTransformer.toEntity(verifiedIdentity)
   }
 

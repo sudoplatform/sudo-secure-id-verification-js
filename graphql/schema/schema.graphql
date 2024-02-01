@@ -6,6 +6,8 @@ type VerifiedIdentity {
   canAttemptVerificationAgain: Boolean!
   idScanUrl: String
   requiredVerificationMethod: String
+  acceptableDocumentTypes: [String!]!
+  documentVerificationStatus: String!
 }
 
 input VerifyIdentityInput {

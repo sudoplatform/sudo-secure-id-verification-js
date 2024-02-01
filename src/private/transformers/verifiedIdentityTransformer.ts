@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { VerifiedIdentity as VerifiedIdentityEntity } from '../../public/types'
+import { VerifiedIdentity as VerifiedIdentityEntity } from '../../public/types/verifiedIdentity'
 import { VerifiedIdentity as VerifiedIdentityGraphQL } from '../../gen/graphql-types'
 import { VerificationMethodTransformer } from './verificationMethodTransformer'
+import { IdDocumentTypeTransformer } from './idDocumentTypeTransformer'
+import { DocumentVerificationStatusTransformer } from './documentVerificationStatusTransformer'
 
 export class VerifiedIdentityTransformer {
   public static toEntity(
@@ -32,6 +34,14 @@ export class VerifiedIdentityTransformer {
           : VerificationMethodTransformer.toEntity(
               graphql.requiredVerificationMethod,
             ),
+      acceptableDocumentTypes:
+        graphql.acceptableDocumentTypes?.map((t) =>
+          IdDocumentTypeTransformer.toEntity(t),
+        ) ?? undefined,
+      documentVerificationStatus:
+        DocumentVerificationStatusTransformer.toEntity(
+          graphql.documentVerificationStatus,
+        ),
     }
   }
 }

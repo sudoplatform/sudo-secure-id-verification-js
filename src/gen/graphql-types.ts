@@ -23,7 +23,7 @@ export type Incremental<T> =
     }
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string | number; output: string }
+  ID: { input: string; output: string }
   String: { input: string; output: string }
   Boolean: { input: boolean; output: boolean }
   Int: { input: number; output: number }
@@ -66,7 +66,9 @@ export type SupportedCountries = {
 
 export type VerifiedIdentity = {
   __typename?: 'VerifiedIdentity'
+  acceptableDocumentTypes: Array<Scalars['String']['output']>
   canAttemptVerificationAgain: Scalars['Boolean']['output']
+  documentVerificationStatus: Scalars['String']['output']
   idScanUrl?: Maybe<Scalars['String']['output']>
   owner: Scalars['String']['output']
   requiredVerificationMethod?: Maybe<Scalars['String']['output']>
@@ -110,6 +112,8 @@ export type CheckIdentityVerificationQuery = {
     canAttemptVerificationAgain: boolean
     idScanUrl?: string | null
     requiredVerificationMethod?: string | null
+    acceptableDocumentTypes: Array<string>
+    documentVerificationStatus: string
   } | null
 }
 
@@ -140,6 +144,8 @@ export type VerifyIdentityMutation = {
     canAttemptVerificationAgain: boolean
     idScanUrl?: string | null
     requiredVerificationMethod?: string | null
+    acceptableDocumentTypes: Array<string>
+    documentVerificationStatus: string
   } | null
 }
 
@@ -156,7 +162,10 @@ export type VerifyIdentityDocumentMutation = {
     verifiedAtEpochMs?: number | null
     verificationMethod: string
     canAttemptVerificationAgain: boolean
+    idScanUrl?: string | null
     requiredVerificationMethod?: string | null
+    acceptableDocumentTypes: Array<string>
+    documentVerificationStatus: string
   } | null
 }
 
@@ -194,6 +203,14 @@ export const CheckIdentityVerificationDocument = {
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'requiredVerificationMethod' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'acceptableDocumentTypes' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'documentVerificationStatus' },
                 },
               ],
             },
@@ -301,6 +318,14 @@ export const VerifyIdentityDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'requiredVerificationMethod' },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'acceptableDocumentTypes' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'documentVerificationStatus' },
+                },
               ],
             },
           },
@@ -368,9 +393,18 @@ export const VerifyIdentityDocumentDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'canAttemptVerificationAgain' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'idScanUrl' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'requiredVerificationMethod' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'acceptableDocumentTypes' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'documentVerificationStatus' },
                 },
               ],
             },

@@ -5,7 +5,7 @@ config
 docs
 cjs
 lib
-types
+/types
 node_modules
 scratch
 yarn-error.log

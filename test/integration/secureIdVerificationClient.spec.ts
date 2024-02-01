@@ -22,7 +22,9 @@ import { TextDecoder, TextEncoder } from 'util'
 import { v4 } from 'uuid'
 import {
   DefaultSudoSecureIdVerificationClient,
+  DocumentVerificationStatus,
   IdDocument,
+  IdDocumentType,
   QueryOption,
   VerificationMethod,
   VerifiedIdentity,
@@ -112,36 +114,59 @@ describe('SudoSecureIdVerificationClient', () => {
      */
     async function validateUnverifiedResponse(
       verifiedIdentity: VerifiedIdentity,
+      options?: {
+        expectedAcceptableDocumentTypes?: IdDocumentType[]
+        expectedDocumentVerificationStatus?: DocumentVerificationStatus
+        expectedRequiredVerificationMethod?: VerificationMethod
+      },
     ): Promise<void> {
       const subject = await sudoUserClient.getSubject()
-      expect(verifiedIdentity).toBeDefined()
-      expect(verifiedIdentity.owner).toEqual(subject)
-      expect(verifiedIdentity.verified).toEqual(false)
-      expect(verifiedIdentity.canAttemptVerificationAgain).toEqual(true)
-      expect(verifiedIdentity.verificationMethod).toEqual(
-        VerificationMethod.None,
-      )
-      expect(verifiedIdentity.verifiedAt ?? new Date(0)).toEqual(new Date(0))
-      expect(verifiedIdentity.idScanUrl ?? '').toHaveLength(0)
-      expect(verifiedIdentity.requiredVerificationMethod).toEqual(
-        VerificationMethod.KnowledgeOfPII,
-      )
+      const sortedExpectedAcceptableDocumentTypes = [
+        ...(options?.expectedAcceptableDocumentTypes ?? []),
+      ].sort()
+
+      const expectedDocumentVerificationStatus =
+        options?.expectedDocumentVerificationStatus ??
+        DocumentVerificationStatus.NotRequired
+      const expectedRequiredVerificationMethod =
+        options?.expectedRequiredVerificationMethod ??
+        VerificationMethod.KnowledgeOfPII
+      expect(verifiedIdentity).toEqual({
+        owner: subject,
+        verified: false,
+        canAttemptVerificationAgain: true,
+        verificationMethod: VerificationMethod.None,
+        verifiedAt: expect.any(Date),
+        idScanUrl: verifiedIdentity.idScanUrl,
+        acceptableDocumentTypes: expect.arrayContaining(
+          sortedExpectedAcceptableDocumentTypes,
+        ),
+        requiredVerificationMethod: expectedRequiredVerificationMethod,
+        documentVerificationStatus: expectedDocumentVerificationStatus,
+      })
+      expect(verifiedIdentity.idScanUrl).toBeFalsy()
+      expect(
+        [...(verifiedIdentity.acceptableDocumentTypes ?? [])].sort(),
+      ).toEqual(sortedExpectedAcceptableDocumentTypes)
+      expect(verifiedIdentity.verifiedAt?.getTime()).toEqual(0)
     }
 
     async function validatePiiVerifiedResponse(
       verifiedIdentity: VerifiedIdentity,
     ): Promise<void> {
       const subject = await sudoUserClient.getSubject()
-      expect(verifiedIdentity).toBeDefined()
-      expect(verifiedIdentity.owner).toEqual(subject)
-      expect(verifiedIdentity.verified).toEqual(true)
-      expect(verifiedIdentity.canAttemptVerificationAgain).toEqual(false)
-      expect(verifiedIdentity.verificationMethod).toEqual(
-        VerificationMethod.KnowledgeOfPII,
-      )
-      expect(verifiedIdentity.requiredVerificationMethod).toEqual(
-        VerificationMethod.KnowledgeOfPII,
-      )
+      expect(verifiedIdentity).toEqual({
+        owner: subject,
+        verified: true,
+        canAttemptVerificationAgain: false,
+        verificationMethod: VerificationMethod.KnowledgeOfPII,
+        verifiedAt: expect.any(Date),
+        idScanUrl: verifiedIdentity.idScanUrl,
+        acceptableDocumentTypes: [],
+        requiredVerificationMethod: VerificationMethod.KnowledgeOfPII,
+        documentVerificationStatus: DocumentVerificationStatus.NotRequired,
+      })
+      expect(verifiedIdentity.idScanUrl).toBeFalsy()
       expect(verifiedIdentity.verifiedAt?.getTime()).toBeGreaterThan(0)
     }
 
@@ -149,17 +174,19 @@ describe('SudoSecureIdVerificationClient', () => {
       verifiedIdentity: VerifiedIdentity,
     ): Promise<void> {
       const subject = await sudoUserClient.getSubject()
-      expect(verifiedIdentity).toBeDefined()
-      expect(verifiedIdentity.owner).toEqual(subject)
-      expect(verifiedIdentity.verified).toEqual(true)
-      expect(verifiedIdentity.canAttemptVerificationAgain).toEqual(false)
-      expect(verifiedIdentity.verificationMethod).toEqual(
-        VerificationMethod.GovernmentID,
-      )
+      expect(verifiedIdentity).toEqual({
+        owner: subject,
+        verified: true,
+        canAttemptVerificationAgain: false,
+        verificationMethod: VerificationMethod.GovernmentID,
+        verifiedAt: expect.any(Date),
+        idScanUrl: verifiedIdentity.idScanUrl,
+        acceptableDocumentTypes: [],
+        requiredVerificationMethod: VerificationMethod.GovernmentID,
+        documentVerificationStatus: DocumentVerificationStatus.Succeeded,
+      })
+      expect(verifiedIdentity.idScanUrl).toBeFalsy()
       expect(verifiedIdentity.verifiedAt?.getTime()).toBeGreaterThan(0)
-      expect(verifiedIdentity.requiredVerificationMethod).toBe(
-        VerificationMethod.GovernmentID,
-      )
     }
 
     /**
@@ -291,15 +318,23 @@ describe('SudoSecureIdVerificationClient', () => {
       verifiedIdentity = await client.verifyIdentity(
         SimulatorPII.INVALID_IDENTITY,
       )
-      await validateUnverifiedResponse(verifiedIdentity)
+      const expectedAcceptableDocumentTypes = [
+        IdDocumentType.IdCard,
+        IdDocumentType.DriverLicense,
+      ]
+      await validateUnverifiedResponse(verifiedIdentity, {
+        expectedAcceptableDocumentTypes,
+      })
 
       verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
+      await validateUnverifiedResponse(verifiedIdentity, {
+        expectedAcceptableDocumentTypes,
+      })
     }, 30000)
 
     it('repeated unsuccessful pii idv with test data, reaching max retries', async () => {
       // Needs different data for each invocation otherwise repeated attempts with the same data
-      // in a small timeframe are ignored by the IDV service.
+      // in a small time frame are ignored by the IDV service.
       let attempt = 1
       while (true) {
         const verifiedIdentity = await client.verifyIdentity(
@@ -340,7 +375,12 @@ describe('SudoSecureIdVerificationClient', () => {
       verifiedIdentity = await client.verifyIdentity(
         SimulatorPII.INVALID_IDENTITY,
       )
-      await validateUnverifiedResponse(verifiedIdentity)
+      await validateUnverifiedResponse(verifiedIdentity, {
+        expectedAcceptableDocumentTypes: [
+          IdDocumentType.DriverLicense,
+          IdDocumentType.IdCard,
+        ],
+      })
 
       const idDocument = await IdDocument.buildDocumentVerificationRequest(
         SimulatorDocuments.VALID_DRIVERS_LICENSE,
@@ -367,6 +407,38 @@ describe('SudoSecureIdVerificationClient', () => {
 
       verifiedIdentity = await client.verifyIdentityDocument(idDocument)
       await validateIdDocumentVerifiedResponse(verifiedIdentity)
+    }, 60000)
+
+    it('unsuccessful idv using unreadable driver license after PII', async () => {
+      let verifiedIdentity = await client.checkIdentityVerification()
+      await validateUnverifiedResponse(verifiedIdentity)
+
+      // verification using id document must be on top of an attempt
+      // using PII
+      verifiedIdentity = await client.verifyIdentity(
+        SimulatorPII.INVALID_IDENTITY,
+      )
+      await validateUnverifiedResponse(verifiedIdentity, {
+        expectedAcceptableDocumentTypes: [
+          IdDocumentType.DriverLicense,
+          IdDocumentType.IdCard,
+        ],
+      })
+
+      const idDocument = await IdDocument.buildDocumentVerificationRequest(
+        SimulatorDocuments.UNREADABLE_DRIVERS_LICENSE,
+      )
+
+      verifiedIdentity = await client.verifyIdentityDocument(idDocument)
+      await validateUnverifiedResponse(verifiedIdentity, {
+        expectedAcceptableDocumentTypes: [
+          IdDocumentType.DriverLicense,
+          IdDocumentType.IdCard,
+        ],
+        expectedRequiredVerificationMethod: VerificationMethod.GovernmentID,
+        expectedDocumentVerificationStatus:
+          DocumentVerificationStatus.DocumentUnreadable,
+      })
     }, 60000)
 
     it('unsuccessful idv using driver license without prior PII attempt', async () => {

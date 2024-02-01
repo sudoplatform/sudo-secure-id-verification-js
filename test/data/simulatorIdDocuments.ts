@@ -19,6 +19,15 @@ export const VALID_DRIVERS_LICENSE: IdDocumentInfo = {
     './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-back-success.jpg',
 }
 
+export const UNREADABLE_DRIVERS_LICENSE: IdDocumentInfo = {
+  country: 'US',
+  documentType: IdDocumentType.DriverLicense,
+  frontImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-front-unreadable.gif',
+  backImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-back-unreadable.gif',
+}
+
 export const VALID_PASSPORT: IdDocumentInfo = {
   country: 'US',
   documentType: IdDocumentType.Passport,

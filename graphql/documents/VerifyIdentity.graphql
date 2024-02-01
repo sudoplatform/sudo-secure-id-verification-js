@@ -7,5 +7,7 @@ mutation VerifyIdentity($input: VerifyIdentityInput!) {
     canAttemptVerificationAgain
     idScanUrl
     requiredVerificationMethod
+    acceptableDocumentTypes
+    documentVerificationStatus
   }
 }

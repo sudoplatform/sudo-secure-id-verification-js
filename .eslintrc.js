@@ -4,7 +4,7 @@ module.exports = {
     {
       files: ['*.js'],
       extends: 'eslint:recommended',
-      parserOptions: { ecmaVersion: 2018 },
+      parserOptions: { ecmaVersion: 2020 },
       env: { node: true },
     },
     {

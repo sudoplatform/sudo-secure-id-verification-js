@@ -7,5 +7,7 @@ query CheckIdentityVerification {
     canAttemptVerificationAgain
     idScanUrl
     requiredVerificationMethod
+    acceptableDocumentTypes
+    documentVerificationStatus
   }
 }

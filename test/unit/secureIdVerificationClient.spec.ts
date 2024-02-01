@@ -12,6 +12,7 @@ import {
   VerificationMethod,
   IdDocumentType,
   VerifyIdentityDocumentInput,
+  DocumentVerificationStatus,
 } from '../../src'
 import { ApiClient } from '../../src/private/client/apiClient'
 import {
@@ -135,6 +136,8 @@ describe('SudoSecureIdVerificationClient', () => {
         verificationMethod: 'NONE',
         canAttemptVerificationAgain: true,
         requiredVerificationMethod: 'KNOWLEDGE_OF_PII',
+        acceptableDocumentTypes: [],
+        documentVerificationStatus: 'notRequired',
       })
 
       const status = await client.checkIdentityVerification()
@@ -144,6 +147,8 @@ describe('SudoSecureIdVerificationClient', () => {
         verificationMethod: VerificationMethod.None,
         canAttemptVerificationAgain: true,
         requiredVerificationMethod: VerificationMethod.KnowledgeOfPII,
+        acceptableDocumentTypes: [],
+        documentVerificationStatus: DocumentVerificationStatus.NotRequired,
       })
 
       verify(apiClientMock.checkIdentityVerification(anything())).once()
@@ -160,6 +165,8 @@ describe('SudoSecureIdVerificationClient', () => {
         verificationMethod: 'NONE',
         canAttemptVerificationAgain: true,
         requiredVerificationMethod: 'KNOWLEDGE_OF_PII',
+        acceptableDocumentTypes: [],
+        documentVerificationStatus: 'notRequired',
       })
 
       const status = await client.checkIdentityVerification(
@@ -171,6 +178,8 @@ describe('SudoSecureIdVerificationClient', () => {
         verificationMethod: VerificationMethod.None,
         canAttemptVerificationAgain: true,
         requiredVerificationMethod: VerificationMethod.KnowledgeOfPII,
+        acceptableDocumentTypes: [],
+        documentVerificationStatus: DocumentVerificationStatus.NotRequired,
       })
 
       verify(apiClientMock.checkIdentityVerification(anything())).once()
@@ -212,20 +221,23 @@ describe('SudoSecureIdVerificationClient', () => {
         verifiedAtEpochMs: now.getTime(),
         canAttemptVerificationAgain: false,
         requiredVerificationMethod: 'KNOWLEDGE_OF_PII',
+        acceptableDocumentTypes: [],
+        documentVerificationStatus: 'notRequired',
       })
 
       const verifiedIdentity = await client.verifyIdentity(
         SimulatorPII.VALID_IDENTITY,
       )
-      expect(verifiedIdentity.verified).toEqual(true)
-      expect(verifiedIdentity.canAttemptVerificationAgain).toEqual(false)
-      expect(verifiedIdentity.verifiedAt).toEqual(now)
-      expect(verifiedIdentity.verificationMethod).toEqual(
-        VerificationMethod.KnowledgeOfPII,
-      )
-      expect(verifiedIdentity.requiredVerificationMethod).toEqual(
-        VerificationMethod.KnowledgeOfPII,
-      )
+      expect(verifiedIdentity).toEqual({
+        owner: 'o-uuid',
+        verified: true,
+        verifiedAt: now,
+        verificationMethod: VerificationMethod.KnowledgeOfPII,
+        canAttemptVerificationAgain: false,
+        requiredVerificationMethod: VerificationMethod.KnowledgeOfPII,
+        acceptableDocumentTypes: [],
+        documentVerificationStatus: DocumentVerificationStatus.NotRequired,
+      })
 
       verify(apiClientMock.verifyIdentity(anything())).once()
       const [actualInput] = capture(apiClientMock.verifyIdentity).first()
@@ -276,18 +288,21 @@ describe('SudoSecureIdVerificationClient', () => {
         verifiedAtEpochMs: now.getTime(),
         canAttemptVerificationAgain: false,
         requiredVerificationMethod: 'GOVERNMENT_ID',
+        acceptableDocumentTypes: [],
+        documentVerificationStatus: 'succeeded',
       })
 
       const verifiedIdentity = await client.verifyIdentityDocument(idDocument)
-      expect(verifiedIdentity.verified).toEqual(true)
-      expect(verifiedIdentity.canAttemptVerificationAgain).toEqual(false)
-      expect(verifiedIdentity.verifiedAt).toEqual(now)
-      expect(verifiedIdentity.verificationMethod).toEqual(
-        VerificationMethod.GovernmentID,
-      )
-      expect(verifiedIdentity.requiredVerificationMethod).toEqual(
-        VerificationMethod.GovernmentID,
-      )
+      expect(verifiedIdentity).toEqual({
+        owner: 'o-uuid',
+        verified: true,
+        verifiedAt: now,
+        verificationMethod: VerificationMethod.GovernmentID,
+        canAttemptVerificationAgain: false,
+        requiredVerificationMethod: VerificationMethod.GovernmentID,
+        acceptableDocumentTypes: [],
+        documentVerificationStatus: DocumentVerificationStatus.Succeeded,
+      })
 
       verify(apiClientMock.verifyIdentityDocument(anything())).once()
       const [actualInput] = capture(

@@ -5,6 +5,9 @@ mutation VerifyIdentityDocument($input: VerifyIdentityDocumentInput!) {
     verifiedAtEpochMs
     verificationMethod
     canAttemptVerificationAgain
+    idScanUrl
     requiredVerificationMethod
+    acceptableDocumentTypes
+    documentVerificationStatus
   }
 }
