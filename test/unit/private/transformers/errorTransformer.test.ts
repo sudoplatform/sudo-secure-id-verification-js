@@ -17,6 +17,7 @@ import {
   InvalidAgeError,
   UnsupportedCountryError,
   UnsupportedVerificationMethodError,
+  UnsupportedNetworkLocationError,
 } from '../../../../src'
 import { ErrorTransformer } from '../../../../src/private/transformers/errorTransformer'
 
@@ -44,8 +45,10 @@ describe('Error Transformer Test Suite', () => {
     ${new ImplausibleAgeError(errorMsg)}
     ${'sudoplatform.identity-verification.InvalidAgeError'}
     ${new InvalidAgeError(errorMsg)}
-    ${'sudoplatform.identity-verification.UnsupportedCurrencyError'}
+    ${'sudoplatform.identity-verification.UnsupportedCountryError'}
     ${new UnsupportedCountryError(errorMsg)}
+    ${'sudoplatform.identity-verification.UnsupportedNetworkLocationError'}
+    ${new UnsupportedNetworkLocationError(errorMsg)}
   `(
     'converts $appSyncErrorType to $expectedErrorType',
     ({ appSyncErrorType, expectedErrorType }) => {

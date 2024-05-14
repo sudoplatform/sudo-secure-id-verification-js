@@ -69,3 +69,12 @@ export class UnsupportedCountryError extends IdentityVerificationError {
     super(msg)
   }
 }
+
+/**
+ * An identity verification attempt was initiated from an unsupported network location.
+ */
+export class UnsupportedNetworkLocationError extends IdentityVerificationError {
+  constructor(msg?: string) {
+    super(msg)
+  }
+}

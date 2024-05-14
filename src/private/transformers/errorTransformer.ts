@@ -16,6 +16,7 @@ import {
   InvalidAgeError,
   UnsupportedCountryError,
   UnsupportedVerificationMethodError,
+  UnsupportedNetworkLocationError,
 } from '../..'
 
 export class ErrorTransformer {
@@ -33,8 +34,10 @@ export class ErrorTransformer {
         return new ImplausibleAgeError(error.message)
       case 'sudoplatform.identity-verification.InvalidAgeError':
         return new InvalidAgeError(error.message)
-      case 'sudoplatform.identity-verification.UnsupportedCurrencyError':
+      case 'sudoplatform.identity-verification.UnsupportedCountryError':
         return new UnsupportedCountryError(error.message)
+      case 'sudoplatform.identity-verification.UnsupportedNetworkLocationError':
+        return new UnsupportedNetworkLocationError(error.message)
       default:
         return mapGraphQLToClientError(error)
     }

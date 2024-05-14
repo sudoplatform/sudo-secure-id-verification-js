@@ -81,6 +81,7 @@ export interface SudoSecureIdVerificationClient {
    * @throws {@link InvalidAgeError}
    * @throws {@link UnsupportedVerificationMethodError}
    * @throws {@link UnsupportedCountryError}
+   * @throws {@link UnsupportedNetworkLocationError}
    * @throws ServiceError
    * @throws UnknownGraphQLError
    * @throws FatalError
@@ -99,6 +100,7 @@ export interface SudoSecureIdVerificationClient {
    * @throws {@link InvalidAgeError}
    * @throws {@link UnsupportedVerificationMethodError}
    * @throws {@link UnsupportedCountryError}
+   * @throws {@link UnsupportedNetworkLocationError}
    * @throws ServiceError
    * @throws UnknownGraphQLError
    * @throws FatalError
