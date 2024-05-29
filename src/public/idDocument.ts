@@ -48,6 +48,9 @@ export class IdDocument {
       backImageBase64: await this.loadAndEncodeImage(
         idDocumentInfo.backImagePath,
       ),
+      faceImageBase64: idDocumentInfo.faceImagePath
+        ? await this.loadAndEncodeImage(idDocumentInfo.faceImagePath)
+        : undefined,
     }
 
     return ret

@@ -78,3 +78,12 @@ export class UnsupportedNetworkLocationError extends IdentityVerificationError {
     super(msg)
   }
 }
+
+/**
+ * An identity verification attempt was initiated with insufficient information.
+ */
+export class RequiredIdentityInformationNotProvidedError extends IdentityVerificationError {
+  constructor(msg?: string) {
+    super(msg)
+  }
+}

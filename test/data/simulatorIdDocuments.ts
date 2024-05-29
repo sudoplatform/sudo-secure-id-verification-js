@@ -17,6 +17,18 @@ export const VALID_DRIVERS_LICENSE: IdDocumentInfo = {
     './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-front-success.jpg',
   backImagePath:
     './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-back-success.jpg',
+  faceImagePath: undefined,
+}
+
+export const VALID_DRIVERS_LICENSE_WITH_FACE_IMAGE: IdDocumentInfo = {
+  country: 'US',
+  documentType: IdDocumentType.DriverLicense,
+  frontImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-front-success.jpg',
+  backImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-back-success.jpg',
+  faceImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/face-image-match.jpg',
 }
 
 export const UNREADABLE_DRIVERS_LICENSE: IdDocumentInfo = {
@@ -26,6 +38,18 @@ export const UNREADABLE_DRIVERS_LICENSE: IdDocumentInfo = {
     './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-front-unreadable.gif',
   backImagePath:
     './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-back-unreadable.gif',
+  faceImagePath: undefined,
+}
+
+export const UNREADABLE_DRIVERS_LICENSE_WITH_FACE_IMAGE: IdDocumentInfo = {
+  country: 'US',
+  documentType: IdDocumentType.DriverLicense,
+  frontImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-front-unreadable.gif',
+  backImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/drivers-license-back-unreadable.gif',
+  faceImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/face-image-match.jpg',
 }
 
 export const VALID_PASSPORT: IdDocumentInfo = {
@@ -35,4 +59,16 @@ export const VALID_PASSPORT: IdDocumentInfo = {
     './test/sudo-identity-verification-test-data/data/id-document-images/simulator/passport-success.jpg',
   backImagePath:
     './test/sudo-identity-verification-test-data/data/id-document-images/simulator/passport-success.jpg',
+  faceImagePath: undefined,
+}
+
+export const VALID_PASSPORT_WITH_FACE_IMAGE: IdDocumentInfo = {
+  country: 'US',
+  documentType: IdDocumentType.Passport,
+  frontImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/passport-success.jpg',
+  backImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/passport-success.jpg',
+  faceImagePath:
+    './test/sudo-identity-verification-test-data/data/id-document-images/simulator/face-image-match.jpg',
 }

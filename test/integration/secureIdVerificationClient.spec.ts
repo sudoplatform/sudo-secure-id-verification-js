@@ -28,6 +28,7 @@ import {
   QueryOption,
   VerificationMethod,
   VerifiedIdentity,
+  VerifyIdentityDocumentInput,
 } from '../../src'
 import * as SimulatorDocuments from '../data/simulatorIdDocuments'
 import * as SimulatorPII from '../data/simulatorPII'
@@ -236,6 +237,29 @@ describe('SudoSecureIdVerificationClient', () => {
       })
     }, 25000)
 
+    it('face image requirement capability', async () => {
+      await expect(client.isFaceImageRequired()).resolves.toBeDefined()
+    }, 20000)
+
+    it('face image requirement capability - cache empty', async () => {
+      try {
+        await client.isFaceImageRequired(QueryOption.CACHE_ONLY)
+      } catch (err: unknown) {
+        const error = err as Error
+        expect(error.name).toBe('FatalError')
+      }
+    }, 20000)
+
+    it('face image requirement capability - cache test', async () => {
+      const remoteIsFaceImageRequired: boolean =
+        await client.isFaceImageRequired(QueryOption.REMOTE_ONLY)
+
+      const cachedIsFaceImageRequired = await client.isFaceImageRequired(
+        QueryOption.CACHE_ONLY,
+      )
+      expect(remoteIsFaceImageRequired).toEqual(cachedIsFaceImageRequired)
+    }, 25000)
+
     it('check idv status for newly registered user', async () => {
       const verifiedIdentity = await client.checkIdentityVerification()
       await validateUnverifiedResponse(verifiedIdentity)
@@ -264,7 +288,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
       verifiedIdentity = await client.checkIdentityVerification()
       await validatePiiVerifiedResponse(verifiedIdentity)
-    }, 30000)
+    }, 45000)
 
     it('successful pii idv with test data, including city and state', async () => {
       let verifiedIdentity = await client.checkIdentityVerification()
@@ -382,9 +406,18 @@ describe('SudoSecureIdVerificationClient', () => {
         ],
       })
 
-      const idDocument = await IdDocument.buildDocumentVerificationRequest(
-        SimulatorDocuments.VALID_DRIVERS_LICENSE,
-      )
+      const isFaceImageRequired: boolean = await client.isFaceImageRequired()
+
+      let idDocument: VerifyIdentityDocumentInput
+      if (isFaceImageRequired) {
+        idDocument = await IdDocument.buildDocumentVerificationRequest(
+          SimulatorDocuments.VALID_DRIVERS_LICENSE_WITH_FACE_IMAGE,
+        )
+      } else {
+        idDocument = await IdDocument.buildDocumentVerificationRequest(
+          SimulatorDocuments.VALID_DRIVERS_LICENSE,
+        )
+      }
 
       verifiedIdentity = await client.verifyIdentityDocument(idDocument)
       await validateIdDocumentVerifiedResponse(verifiedIdentity)
@@ -401,9 +434,18 @@ describe('SudoSecureIdVerificationClient', () => {
       )
       await validatePiiVerifiedResponse(verifiedIdentity)
 
-      const idDocument = await IdDocument.buildDocumentVerificationRequest(
-        SimulatorDocuments.VALID_PASSPORT,
-      )
+      const isFaceImageRequired: boolean = await client.isFaceImageRequired()
+
+      let idDocument: VerifyIdentityDocumentInput
+      if (isFaceImageRequired) {
+        idDocument = await IdDocument.buildDocumentVerificationRequest(
+          SimulatorDocuments.VALID_PASSPORT_WITH_FACE_IMAGE,
+        )
+      } else {
+        idDocument = await IdDocument.buildDocumentVerificationRequest(
+          SimulatorDocuments.VALID_PASSPORT,
+        )
+      }
 
       verifiedIdentity = await client.verifyIdentityDocument(idDocument)
       await validateIdDocumentVerifiedResponse(verifiedIdentity)
@@ -425,9 +467,18 @@ describe('SudoSecureIdVerificationClient', () => {
         ],
       })
 
-      const idDocument = await IdDocument.buildDocumentVerificationRequest(
-        SimulatorDocuments.UNREADABLE_DRIVERS_LICENSE,
-      )
+      const isFaceImageRequired: boolean = await client.isFaceImageRequired()
+
+      let idDocument: VerifyIdentityDocumentInput
+      if (isFaceImageRequired) {
+        idDocument = await IdDocument.buildDocumentVerificationRequest(
+          SimulatorDocuments.UNREADABLE_DRIVERS_LICENSE_WITH_FACE_IMAGE,
+        )
+      } else {
+        idDocument = await IdDocument.buildDocumentVerificationRequest(
+          SimulatorDocuments.UNREADABLE_DRIVERS_LICENSE,
+        )
+      }
 
       verifiedIdentity = await client.verifyIdentityDocument(idDocument)
       await validateUnverifiedResponse(verifiedIdentity, {

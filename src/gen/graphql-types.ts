@@ -39,6 +39,12 @@ export type Scalars = {
   AWSURL: { input: any; output: any }
 }
 
+export type IdentityVerificationCapabilities = {
+  __typename?: 'IdentityVerificationCapabilities'
+  faceImageRequiredWithDocument: Scalars['Boolean']['output']
+  supportedCountries: Array<Scalars['String']['output']>
+}
+
 export type Mutation = {
   __typename?: 'Mutation'
   verifyIdentity?: Maybe<VerifiedIdentity>
@@ -56,12 +62,7 @@ export type MutationVerifyIdentityDocumentArgs = {
 export type Query = {
   __typename?: 'Query'
   checkIdentityVerification?: Maybe<VerifiedIdentity>
-  getSupportedCountriesForIdentityVerification?: Maybe<SupportedCountries>
-}
-
-export type SupportedCountries = {
-  __typename?: 'SupportedCountries'
-  countryList: Array<Scalars['String']['output']>
+  getIdentityVerificationCapabilities?: Maybe<IdentityVerificationCapabilities>
 }
 
 export type VerifiedIdentity = {
@@ -81,6 +82,7 @@ export type VerifyIdentityDocumentInput = {
   backImageBase64: Scalars['String']['input']
   country: Scalars['String']['input']
   documentType: Scalars['String']['input']
+  faceImageBase64?: InputMaybe<Scalars['String']['input']>
   imageBase64: Scalars['String']['input']
   verificationMethod?: InputMaybe<Scalars['String']['input']>
 }
@@ -117,15 +119,16 @@ export type CheckIdentityVerificationQuery = {
   } | null
 }
 
-export type GetSupportedCountriesForIdentityVerificationQueryVariables = Exact<{
+export type GetIdentityVerificationCapabilitiesQueryVariables = Exact<{
   [key: string]: never
 }>
 
-export type GetSupportedCountriesForIdentityVerificationQuery = {
+export type GetIdentityVerificationCapabilitiesQuery = {
   __typename?: 'Query'
-  getSupportedCountriesForIdentityVerification?: {
-    __typename?: 'SupportedCountries'
-    countryList: Array<string>
+  getIdentityVerificationCapabilities?: {
+    __typename?: 'IdentityVerificationCapabilities'
+    supportedCountries: Array<string>
+    faceImageRequiredWithDocument: boolean
   } | null
 }
 
@@ -223,16 +226,13 @@ export const CheckIdentityVerificationDocument = {
   CheckIdentityVerificationQuery,
   CheckIdentityVerificationQueryVariables
 >
-export const GetSupportedCountriesForIdentityVerificationDocument = {
+export const GetIdentityVerificationCapabilitiesDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'query',
-      name: {
-        kind: 'Name',
-        value: 'GetSupportedCountriesForIdentityVerification',
-      },
+      name: { kind: 'Name', value: 'GetIdentityVerificationCapabilities' },
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
@@ -240,12 +240,22 @@ export const GetSupportedCountriesForIdentityVerificationDocument = {
             kind: 'Field',
             name: {
               kind: 'Name',
-              value: 'getSupportedCountriesForIdentityVerification',
+              value: 'getIdentityVerificationCapabilities',
             },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'countryList' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'supportedCountries' },
+                },
+                {
+                  kind: 'Field',
+                  name: {
+                    kind: 'Name',
+                    value: 'faceImageRequiredWithDocument',
+                  },
+                },
               ],
             },
           },
@@ -254,8 +264,8 @@ export const GetSupportedCountriesForIdentityVerificationDocument = {
     },
   ],
 } as unknown as DocumentNode<
-  GetSupportedCountriesForIdentityVerificationQuery,
-  GetSupportedCountriesForIdentityVerificationQueryVariables
+  GetIdentityVerificationCapabilitiesQuery,
+  GetIdentityVerificationCapabilitiesQueryVariables
 >
 export const VerifyIdentityDocument = {
   kind: 'Document',

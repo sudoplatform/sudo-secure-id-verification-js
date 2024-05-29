@@ -7,7 +7,7 @@
 export enum DocumentVerificationStatus {
   // ID document is not required
   NotRequired = 'notRequired',
-  // ID document is required but has not yet uplaoded
+  // ID document is required but has not yet uploaded
   NotAttempted = 'notAttempted',
   // ID document images have been uploaded and is being processed
   Pending = 'pending',

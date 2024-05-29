@@ -14,12 +14,12 @@ export class VerifyIdentityDocumentInputTransformer {
     entity: VerifyIdentityDocumentInputEntity,
   ): VerifyIdentityDocumentInputGraphQL {
     return {
-      verificationMethod:
-        entity.verificationMethod === undefined
-          ? undefined
-          : VerificationMethodTransformer.toGraphQL(entity.verificationMethod),
+      verificationMethod: VerificationMethodTransformer.toGraphQL(
+        entity.verificationMethod,
+      ),
       imageBase64: entity.imageBase64,
       backImageBase64: entity.backImageBase64,
+      faceImageBase64: entity.faceImageBase64,
       country: entity.country,
       documentType: IdDocumentTypeTransformer.toGraphQL(entity.documentType),
     }

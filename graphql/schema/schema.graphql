@@ -26,12 +26,14 @@ input VerifyIdentityDocumentInput {
   verificationMethod: String = "GOVERNMENT_ID"
   imageBase64: String!
   backImageBase64: String!
+  faceImageBase64: String
   country: String!
   documentType: String!
 }
 
-type SupportedCountries {
-  countryList: [String!]!
+type IdentityVerificationCapabilities {
+  supportedCountries: [String!]!
+  faceImageRequiredWithDocument: Boolean!
 }
 
 type Mutation {
@@ -41,5 +43,5 @@ type Mutation {
 
 type Query {
   checkIdentityVerification: VerifiedIdentity
-  getSupportedCountriesForIdentityVerification: SupportedCountries
+  getIdentityVerificationCapabilities: IdentityVerificationCapabilities
 }

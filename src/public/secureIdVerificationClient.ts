@@ -54,6 +54,19 @@ export interface SudoSecureIdVerificationClient {
   listSupportedCountries(queryOption?: QueryOption): Promise<string[]>
 
   /**
+   * Retrieves whether face images must be provided as part of ID document
+   * verification.
+   *
+   * @returns Boolean
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  isFaceImageRequired(queryOption?: QueryOption): Promise<boolean>
+
+  /**
    * Queries the current identity verification status for the signed in user.
    *
    * @returns Verified identity results.
@@ -170,9 +183,31 @@ export class DefaultSudoSecureIdVerificationClient
     }
 
     this.logger.info('Listing supported countries for identity verification')
-    const supportedCountries =
-      await this.apiClient.listSupportedCountries(queryOption)
-    return supportedCountries.countryList
+    const capabilities = await this.apiClient.getCapabilities(queryOption)
+    return capabilities.supportedCountries
+  }
+
+  /**
+   * Retrieves whether face images must be provided as part of ID document
+   * verification.
+   *
+   * @returns Boolean
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  async isFaceImageRequired(queryOption?: QueryOption): Promise<boolean> {
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
+
+    this.logger.info(
+      'Determining requirement to provide face image with ID document',
+    )
+    const capabilities = await this.apiClient.getCapabilities(queryOption)
+    return capabilities.faceImageRequiredWithDocument
   }
 
   /**

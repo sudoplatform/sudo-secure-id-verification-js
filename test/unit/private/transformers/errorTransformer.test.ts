@@ -18,6 +18,7 @@ import {
   UnsupportedCountryError,
   UnsupportedVerificationMethodError,
   UnsupportedNetworkLocationError,
+  RequiredIdentityInformationNotProvidedError,
 } from '../../../../src'
 import { ErrorTransformer } from '../../../../src/private/transformers/errorTransformer'
 
@@ -28,7 +29,7 @@ describe('Error Transformer Test Suite', () => {
   const errorMsg = v4()
 
   it.each`
-    appSyncErrorType                                                                | expectedErrorType
+    appSyncErrorType                                                                    | expectedErrorType
     ${'DynamoDB:ConditionalCheckFailedException'}
     ${new VersionMismatchError()}
     ${'sudoplatform.InvalidArgumentError'}
@@ -49,6 +50,8 @@ describe('Error Transformer Test Suite', () => {
     ${new UnsupportedCountryError(errorMsg)}
     ${'sudoplatform.identity-verification.UnsupportedNetworkLocationError'}
     ${new UnsupportedNetworkLocationError(errorMsg)}
+    ${'sudoplatform.identity-verification.RequiredIdentityInformationNotProvidedError'}
+    ${new RequiredIdentityInformationNotProvidedError(errorMsg)}
   `(
     'converts $appSyncErrorType to $expectedErrorType',
     ({ appSyncErrorType, expectedErrorType }) => {

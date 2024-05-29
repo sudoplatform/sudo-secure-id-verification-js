@@ -96,8 +96,9 @@ describe('SudoSecureIdVerificationClient', () => {
 
     it('returns successfully', async () => {
       // with no query option
-      when(apiClientMock.listSupportedCountries(undefined)).thenResolve({
-        countryList: ['US'],
+      when(apiClientMock.getCapabilities(anything())).thenResolve({
+        supportedCountries: ['US'],
+        faceImageRequiredWithDocument: false,
       })
 
       let supportedCountries = await client.listSupportedCountries()
@@ -106,18 +107,44 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(supportedCountries[0]).toEqual('US')
 
       // with a query option
-      when(
-        apiClientMock.listSupportedCountries(QueryOption.CACHE_ONLY),
-      ).thenResolve({
-        countryList: ['US'],
-      })
-
       supportedCountries = await client.listSupportedCountries(
         QueryOption.CACHE_ONLY,
       )
       expect(supportedCountries).toBeDefined()
       expect(supportedCountries.length).toEqual(1)
       expect(supportedCountries[0]).toEqual('US')
+
+      verify(apiClientMock.getCapabilities(anything())).twice()
+      const [arg1] = capture(apiClientMock.getCapabilities).first()
+      expect(arg1).toBeUndefined()
+      const [arg2] = capture(apiClientMock.getCapabilities).second()
+      expect(arg2).toEqual(QueryOption.CACHE_ONLY)
+    })
+  })
+
+  describe('isFaceImageRequired()', () => {
+    it('throws NotSignedInError if not signed in', async () => {
+      when(sudoUserClientMock.isSignedIn()).thenResolve(false)
+      await expect(client.isFaceImageRequired()).rejects.toEqual(
+        new NotSignedInError(),
+      )
+    })
+
+    it('returns successfully', async () => {
+      // with no query option
+      when(apiClientMock.getCapabilities(anything())).thenResolve({
+        supportedCountries: ['US'],
+        faceImageRequiredWithDocument: false,
+      })
+
+      let isFaceImageRequired = await client.isFaceImageRequired()
+      expect(isFaceImageRequired).toBeFalsy()
+
+      // with a query option
+      isFaceImageRequired = await client.isFaceImageRequired(
+        QueryOption.CACHE_ONLY,
+      )
+      expect(isFaceImageRequired).toBeFalsy()
     })
   })
 
@@ -255,8 +282,8 @@ describe('SudoSecureIdVerificationClient', () => {
         documentType: IdDocumentType.DriverLicense,
         frontImagePath: SimulatorDocuments.VALID_DRIVERS_LICENSE.frontImagePath,
         backImagePath: SimulatorDocuments.VALID_DRIVERS_LICENSE.backImagePath,
+        faceImagePath: undefined,
       })
-      idDocument.verificationMethod = undefined
     })
 
     it('throws NotSignedInError if not signed in', async () => {
@@ -293,6 +320,52 @@ describe('SudoSecureIdVerificationClient', () => {
       })
 
       const verifiedIdentity = await client.verifyIdentityDocument(idDocument)
+      expect(verifiedIdentity).toEqual({
+        owner: 'o-uuid',
+        verified: true,
+        verifiedAt: now,
+        verificationMethod: VerificationMethod.GovernmentID,
+        canAttemptVerificationAgain: false,
+        requiredVerificationMethod: VerificationMethod.GovernmentID,
+        acceptableDocumentTypes: [],
+        documentVerificationStatus: DocumentVerificationStatus.Succeeded,
+      })
+
+      verify(apiClientMock.verifyIdentityDocument(anything())).once()
+      const [actualInput] = capture(
+        apiClientMock.verifyIdentityDocument,
+      ).first()
+      expect(actualInput).toEqual(
+        VerifyIdentityDocumentInputTransformer.toGraphQL(idDocument),
+      )
+    })
+
+    it('returns successfully - face image supplied', async () => {
+      const now = new Date()
+      when(apiClientMock.verifyIdentityDocument(anything())).thenResolve({
+        owner: 'o-uuid',
+        verified: true,
+        verificationMethod: 'GOVERNMENT_ID',
+        verifiedAtEpochMs: now.getTime(),
+        canAttemptVerificationAgain: false,
+        requiredVerificationMethod: 'GOVERNMENT_ID',
+        acceptableDocumentTypes: [],
+        documentVerificationStatus: 'succeeded',
+      })
+
+      const idDocumentWithFaceImage: VerifyIdentityDocumentInput =
+        await IdDocument.buildDocumentVerificationRequest({
+          country: 'US',
+          documentType: IdDocumentType.DriverLicense,
+          frontImagePath:
+            SimulatorDocuments.VALID_DRIVERS_LICENSE.frontImagePath,
+          backImagePath: SimulatorDocuments.VALID_DRIVERS_LICENSE.backImagePath,
+          faceImagePath: SimulatorDocuments.VALID_DRIVERS_LICENSE.faceImagePath,
+        })
+
+      const verifiedIdentity = await client.verifyIdentityDocument(
+        idDocumentWithFaceImage,
+      )
       expect(verifiedIdentity).toEqual({
         owner: 'o-uuid',
         verified: true,

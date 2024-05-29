@@ -11,14 +11,17 @@ import { VerificationMethod } from './verificationMethod'
  * Input to verifyIdentityDocument method
  *
  * @property {VerificationMethod} verificationMethod
- *     Verification method to use to verify data. Must be
- *     {@link VerificationMethod.GovernmentID} if specified.
+ *     Verification method to use to verify data.
+ *     {@link VerificationMethod.GovernmentID} is the only supported value
  *
  * @property {string} imageBase64
  *     Base64 encoded image of front of government ID document
  *
  * @property {string} backImageBase64
  *     Base64 encoded image of back of government ID document
+ *
+ * @property {string} faceImageBase64
+ *     Base64 encoded image of face image to compare to ID document
  *
  * @property {string} country
  *     ISO 3166-1 alpha-2 country code, e.g. US.
@@ -27,9 +30,10 @@ import { VerificationMethod } from './verificationMethod'
  *     Type of id document being presented.
  */
 export interface VerifyIdentityDocumentInput {
-  verificationMethod?: VerificationMethod
+  verificationMethod: VerificationMethod
   imageBase64: string
   backImageBase64: string
+  faceImageBase64?: string
   country: string
   documentType: IdDocumentType
 }

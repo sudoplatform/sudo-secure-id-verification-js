@@ -15,9 +15,9 @@ import { AWSAppSyncClient } from 'aws-appsync'
 import {
   CheckIdentityVerificationDocument,
   CheckIdentityVerificationQuery,
-  GetSupportedCountriesForIdentityVerificationDocument,
-  GetSupportedCountriesForIdentityVerificationQuery,
-  SupportedCountries,
+  GetIdentityVerificationCapabilitiesDocument,
+  GetIdentityVerificationCapabilitiesQuery,
+  IdentityVerificationCapabilities,
   VerifiedIdentity,
   VerifyIdentityDocument,
   VerifyIdentityDocumentDocument,
@@ -42,18 +42,16 @@ export class ApiClient {
     this._client = clientManager.getClient({ disableOffline: true })
   }
 
-  public async listSupportedCountries(
+  public async getCapabilities(
     queryOption?: QueryOption,
-  ): Promise<SupportedCountries> {
+  ): Promise<IdentityVerificationCapabilities> {
     let result
     try {
       result =
-        await this._client.query<GetSupportedCountriesForIdentityVerificationQuery>(
-          {
-            query: GetSupportedCountriesForIdentityVerificationDocument,
-            fetchPolicy: queryOption || QueryOption.REMOTE_ONLY,
-          },
-        )
+        await this._client.query<GetIdentityVerificationCapabilitiesQuery>({
+          query: GetIdentityVerificationCapabilitiesDocument,
+          fetchPolicy: queryOption || QueryOption.REMOTE_ONLY,
+        })
     } catch (err) {
       const apolloError = err as ApolloError
       const error = apolloError.graphQLErrors?.[0]
@@ -69,12 +67,10 @@ export class ApiClient {
       throw ErrorTransformer.toClientError(error)
     }
 
-    if (
-      result.data?.getSupportedCountriesForIdentityVerification?.countryList
-    ) {
-      return result.data.getSupportedCountriesForIdentityVerification
+    if (result.data?.getIdentityVerificationCapabilities) {
+      return result.data.getIdentityVerificationCapabilities
     } else {
-      throw new FatalError('listSupportedCountries did not return any result')
+      throw new FatalError('isFaceImageRequired did not return any result')
     }
   }
 
