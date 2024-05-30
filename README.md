@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sudo Secure Id Verification JS SDK helps developers verify the legal identity of individuals from their personal data and images of government issued documents.
+Sudo Secure ID Verification JS SDK helps developers verify the legal identity of individuals from their personal data and images of government issued documents.
 
 Please see the [Sudo Platform Developer Docs](https://sudoplatform.com/docs) for an overview of Secure ID Verification in the Sudo Platform.
 
