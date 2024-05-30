@@ -19,7 +19,7 @@
     "integration-test": "yarn jest --runInBand test/integration",
     "clean": "rm -rf esm lib docs types src/gen",
     "build": "yarn codegen && yarn build:nocodegen",
-    "build:nocodegen": "yarn verify && yarn build:transpile",
+    "build:nocodegen": "yarn verify && yarn build:transpile && yarn build:docs",
     "build:transpile": "concurrently \"yarn build:transpile:declarations\" \"yarn build:transpile:cjs\" \"yarn build:transpile:esm\"",
     "build:transpile:cjs": "tsc --project tsconfig.commonjs.json",
     "build:transpile:esm": "tsc",

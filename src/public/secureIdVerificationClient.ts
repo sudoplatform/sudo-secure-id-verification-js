@@ -137,9 +137,9 @@ export class DefaultSudoSecureIdVerificationClient
   /**
    * Initializes the Secure ID Verification client.
    *
-   * @param {SudoUserClient} options.sudoUserClient SudoUserClient to use
-   * @param {Logger} options.logger Existing logger. If not specified, a new one is constructed.
-   * @param {ApiClient} options.apiClient Undocumented
+   * @param {SudoSecureIdVerificationClientOptions} options
+   *    Specify the SudoUserClient and Logger to use. If no Logger is
+   *    specified, a new one is constructed.
    *
    * @throws ConfigurationSetNotFoundError
    *     If identity verification service is not configured in the environment
