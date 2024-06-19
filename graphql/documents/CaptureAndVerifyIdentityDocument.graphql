@@ -1,0 +1,15 @@
+mutation CaptureAndVerifyIdentityDocument(
+  $input: VerifyIdentityDocumentInput!
+) {
+  captureAndVerifyIdentityDocument(input: $input) {
+    owner
+    verified
+    verifiedAtEpochMs
+    verificationMethod
+    canAttemptVerificationAgain
+    idScanUrl
+    requiredVerificationMethod
+    acceptableDocumentTypes
+    documentVerificationStatus
+  }
+}

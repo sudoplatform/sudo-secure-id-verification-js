@@ -56,17 +56,17 @@
     "graphql": "^15.8.0",
     "io-ts": "^2.2.21",
     "tslib": "^2.6.2",
-    "ws": "^8.17.0"
+    "ws": "^8.17.1"
   },
   "devDependencies": {
-    "@graphql-codegen/add": "^5.0.2",
+    "@graphql-codegen/add": "^5.0.3",
     "@graphql-codegen/cli": "^5.0.2",
     "@graphql-codegen/typed-document-node": "^5.0.7",
     "@graphql-codegen/typescript": "^4.0.7",
     "@graphql-codegen/typescript-operations": "^4.2.1",
     "@graphql-typed-document-node/apollo-client-2": "^1.0.0",
     "@sudoplatform/sudo-api-client": "^14.0.1",
-    "@sudoplatform/sudo-common": "^8.8.6",
+    "@sudoplatform/sudo-common": "^8.9.0",
     "@sudoplatform/sudo-entitlements": "^16.0.5",
     "@sudoplatform/sudo-entitlements-admin": "^11.2.2",
     "@sudoplatform/sudo-user": "^13.1.0",
@@ -83,7 +83,7 @@
     "eslint-plugin-tree-shaking": "^1.12.1",
     "husky": "^8.0.3",
     "jest": "^27.5.1",
-    "prettier": "^3.2.5",
+    "prettier": "^3.3.2",
     "ts-jest": "^27.1.5",
     "ts-mockito": "^2.6.1",
     "ts-node": "^10.9.2",
@@ -96,8 +96,9 @@
     "apollo-link": "^1.2.14",
     "apollo-link-http": "^1.5.17",
     "aws-appsync": "^4.1.10",
+    "braces": "^3.0.3",
     "graphql": "^15.8.0",
-    "ws": "^8.17.0"
+    "ws": "^8.17.1"
   },
   "peerDependencies": {
     "@sudoplatform/sudo-api-client": "^14.0.0",

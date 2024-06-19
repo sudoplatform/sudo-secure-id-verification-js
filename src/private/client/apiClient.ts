@@ -13,16 +13,18 @@ import { NormalizedCacheObject } from 'apollo-cache-inmemory'
 import { ApolloError } from 'apollo-client'
 import { AWSAppSyncClient } from 'aws-appsync'
 import {
+  CaptureAndVerifyIdentityDocumentDocument,
+  CaptureAndVerifyIdentityDocumentMutation,
   CheckIdentityVerificationDocument,
   CheckIdentityVerificationQuery,
   GetIdentityVerificationCapabilitiesDocument,
   GetIdentityVerificationCapabilitiesQuery,
   IdentityVerificationCapabilities,
   VerifiedIdentity,
-  VerifyIdentityDocument,
   VerifyIdentityDocumentDocument,
   VerifyIdentityDocumentInput,
   VerifyIdentityDocumentMutation,
+  VerifyIdentityDocument,
   VerifyIdentityInput,
   VerifyIdentityMutation,
 } from '../../gen/graphql-types'
@@ -165,7 +167,40 @@ export class ApiClient {
     if (result.data?.verifyIdentityDocument) {
       return result.data.verifyIdentityDocument
     } else {
-      throw new FatalError('unable to verify identity')
+      throw new FatalError('unable to verify identity document')
+    }
+  }
+
+  public async captureAndVerifyIdentityDocument(
+    idDocumentInfo: VerifyIdentityDocumentInput,
+  ): Promise<VerifiedIdentity> {
+    let result
+    try {
+      result =
+        await this._client.mutate<CaptureAndVerifyIdentityDocumentMutation>({
+          mutation: CaptureAndVerifyIdentityDocumentDocument,
+          variables: { input: idDocumentInfo },
+          fetchPolicy: 'no-cache',
+        })
+    } catch (err) {
+      const apolloError = err as ApolloError
+      const error = apolloError.graphQLErrors?.[0]
+      if (error) {
+        throw ErrorTransformer.toClientError(error)
+      } else {
+        throw new UnknownGraphQLError(error)
+      }
+    }
+
+    const error = result.errors?.[0]
+    if (error) {
+      throw ErrorTransformer.toClientError(error)
+    }
+
+    if (result.data?.captureAndVerifyIdentityDocument) {
+      return result.data.captureAndVerifyIdentityDocument
+    } else {
+      throw new FatalError('unable to capture and verify identity document')
     }
   }
 

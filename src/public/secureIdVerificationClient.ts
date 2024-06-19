@@ -121,6 +121,28 @@ export interface SudoSecureIdVerificationClient {
   verifyIdentityDocument(
     idDocumentInfo: VerifyIdentityDocumentInput,
   ): Promise<VerifiedIdentity>
+
+  /**
+   * Attempts to extracts identity information from provided identity documents,
+   * and then use that to verify identity.
+   *
+   * @returns Verified identity results.
+   *
+   * @param {VerifyIdentityDocumentInput} idDocumentInfo Identity document information
+   *
+   * @throws NotSignedInError
+   * @throws {@link ImplausibleAgeError}
+   * @throws {@link InvalidAgeError}
+   * @throws {@link UnsupportedVerificationMethodError}
+   * @throws {@link UnsupportedCountryError}
+   * @throws {@link UnsupportedNetworkLocationError}
+   * @throws ServiceError
+   * @throws UnknownGraphQLError
+   * @throws FatalError
+   */
+  captureAndVerifyIdentityDocument(
+    idDocumentInfo: VerifyIdentityDocumentInput,
+  ): Promise<VerifiedIdentity>
 }
 
 /**
@@ -307,6 +329,49 @@ export class DefaultSudoSecureIdVerificationClient
       VerifyIdentityDocumentInputTransformer.toGraphQL(idDocumentInfo)
 
     const verifiedIdentity = await this.apiClient.verifyIdentityDocument(input)
+
+    return VerifiedIdentityTransformer.toEntity(verifiedIdentity)
+  }
+
+  /**
+   * Attempts to extracts identity information from provided identity documents,
+   * and then use that to verify identity.
+   *
+   * @returns Verified identity results.
+   *
+   * @param {VerifyIdentityDocumentInput} idDocumentInfo
+   *     Identity document information. The verificationMethod property must
+   *     be absent or set to {@link VerificationMethod.GovernmentID}
+   *
+   * @throws NotSignedInError
+   * @throws IllegalArgumentError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  async captureAndVerifyIdentityDocument(
+    idDocumentInfo: VerifyIdentityDocumentInput,
+  ): Promise<VerifiedIdentity> {
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
+
+    this.logger.info('Capture identity from document and verify')
+
+    if (!idDocumentInfo.verificationMethod) {
+      idDocumentInfo.verificationMethod = VerificationMethod.GovernmentID
+    }
+    if (idDocumentInfo.verificationMethod !== VerificationMethod.GovernmentID) {
+      throw new IllegalArgumentError(
+        `${idDocumentInfo.verificationMethod} is not a supported verification method for verifyIdentityDocument`,
+      )
+    }
+
+    const input =
+      VerifyIdentityDocumentInputTransformer.toGraphQL(idDocumentInfo)
+
+    const verifiedIdentity =
+      await this.apiClient.captureAndVerifyIdentityDocument(input)
 
     return VerifiedIdentityTransformer.toEntity(verifiedIdentity)
   }

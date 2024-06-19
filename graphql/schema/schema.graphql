@@ -39,6 +39,7 @@ type IdentityVerificationCapabilities {
 type Mutation {
   verifyIdentity(input: VerifyIdentityInput): VerifiedIdentity
   verifyIdentityDocument(input: VerifyIdentityDocumentInput): VerifiedIdentity
+  captureAndVerifyIdentityDocument(input: VerifyIdentityDocumentInput): VerifiedIdentity
 }
 
 type Query {

@@ -47,8 +47,13 @@ export type IdentityVerificationCapabilities = {
 
 export type Mutation = {
   __typename?: 'Mutation'
+  captureAndVerifyIdentityDocument?: Maybe<VerifiedIdentity>
   verifyIdentity?: Maybe<VerifiedIdentity>
   verifyIdentityDocument?: Maybe<VerifiedIdentity>
+}
+
+export type MutationCaptureAndVerifyIdentityDocumentArgs = {
+  input?: InputMaybe<VerifyIdentityDocumentInput>
 }
 
 export type MutationVerifyIdentityArgs = {
@@ -97,6 +102,26 @@ export type VerifyIdentityInput = {
   postalCode: Scalars['String']['input']
   state?: InputMaybe<Scalars['String']['input']>
   verificationMethod?: InputMaybe<Scalars['String']['input']>
+}
+
+export type CaptureAndVerifyIdentityDocumentMutationVariables = Exact<{
+  input: VerifyIdentityDocumentInput
+}>
+
+export type CaptureAndVerifyIdentityDocumentMutation = {
+  __typename?: 'Mutation'
+  captureAndVerifyIdentityDocument?: {
+    __typename?: 'VerifiedIdentity'
+    owner: string
+    verified: boolean
+    verifiedAtEpochMs?: number | null
+    verificationMethod: string
+    canAttemptVerificationAgain: boolean
+    idScanUrl?: string | null
+    requiredVerificationMethod?: string | null
+    acceptableDocumentTypes: Array<string>
+    documentVerificationStatus: string
+  } | null
 }
 
 export type CheckIdentityVerificationQueryVariables = Exact<{
@@ -172,6 +197,86 @@ export type VerifyIdentityDocumentMutation = {
   } | null
 }
 
+export const CaptureAndVerifyIdentityDocumentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CaptureAndVerifyIdentityDocument' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'VerifyIdentityDocumentInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'captureAndVerifyIdentityDocument' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'owner' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'verified' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'verifiedAtEpochMs' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'verificationMethod' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'canAttemptVerificationAgain' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'idScanUrl' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'requiredVerificationMethod' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'acceptableDocumentTypes' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'documentVerificationStatus' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CaptureAndVerifyIdentityDocumentMutation,
+  CaptureAndVerifyIdentityDocumentMutationVariables
+>
 export const CheckIdentityVerificationDocument = {
   kind: 'Document',
   definitions: [

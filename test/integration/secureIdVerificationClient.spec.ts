@@ -507,6 +507,28 @@ describe('SudoSecureIdVerificationClient', () => {
         // expected
       }
     }, 60000)
+
+    it('successful capture and verification using driver license', async () => {
+      let verifiedIdentity = await client.checkIdentityVerification()
+      await validateUnverifiedResponse(verifiedIdentity)
+
+      const isFaceImageRequired: boolean = await client.isFaceImageRequired()
+
+      let idDocument: VerifyIdentityDocumentInput
+      if (isFaceImageRequired) {
+        idDocument = await IdDocument.buildDocumentVerificationRequest(
+          SimulatorDocuments.VALID_DRIVERS_LICENSE_WITH_FACE_IMAGE,
+        )
+      } else {
+        idDocument = await IdDocument.buildDocumentVerificationRequest(
+          SimulatorDocuments.VALID_DRIVERS_LICENSE,
+        )
+      }
+
+      verifiedIdentity =
+        await client.captureAndVerifyIdentityDocument(idDocument)
+      await validateIdDocumentVerifiedResponse(verifiedIdentity)
+    }, 60000)
   } else {
     it('Skip all tests.', () => {
       console.log(
