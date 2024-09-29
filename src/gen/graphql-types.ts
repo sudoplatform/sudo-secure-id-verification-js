@@ -78,9 +78,10 @@ export type VerifiedIdentity = {
   idScanUrl?: Maybe<Scalars['String']['output']>
   owner: Scalars['String']['output']
   requiredVerificationMethod?: Maybe<Scalars['String']['output']>
+  verificationLastAttemptedAtEpochMs: Scalars['Float']['output']
   verificationMethod: Scalars['String']['output']
   verified: Scalars['Boolean']['output']
-  verifiedAtEpochMs?: Maybe<Scalars['Float']['output']>
+  verifiedAtEpochMs: Scalars['Float']['output']
 }
 
 export type VerifyIdentityDocumentInput = {
@@ -114,13 +115,14 @@ export type CaptureAndVerifyIdentityDocumentMutation = {
     __typename?: 'VerifiedIdentity'
     owner: string
     verified: boolean
-    verifiedAtEpochMs?: number | null
+    verifiedAtEpochMs: number
     verificationMethod: string
     canAttemptVerificationAgain: boolean
     idScanUrl?: string | null
     requiredVerificationMethod?: string | null
     acceptableDocumentTypes: Array<string>
     documentVerificationStatus: string
+    verificationLastAttemptedAtEpochMs: number
   } | null
 }
 
@@ -134,13 +136,14 @@ export type CheckIdentityVerificationQuery = {
     __typename?: 'VerifiedIdentity'
     owner: string
     verified: boolean
-    verifiedAtEpochMs?: number | null
+    verifiedAtEpochMs: number
     verificationMethod: string
     canAttemptVerificationAgain: boolean
     idScanUrl?: string | null
     requiredVerificationMethod?: string | null
     acceptableDocumentTypes: Array<string>
     documentVerificationStatus: string
+    verificationLastAttemptedAtEpochMs: number
   } | null
 }
 
@@ -167,13 +170,14 @@ export type VerifyIdentityMutation = {
     __typename?: 'VerifiedIdentity'
     owner: string
     verified: boolean
-    verifiedAtEpochMs?: number | null
+    verifiedAtEpochMs: number
     verificationMethod: string
     canAttemptVerificationAgain: boolean
     idScanUrl?: string | null
     requiredVerificationMethod?: string | null
     acceptableDocumentTypes: Array<string>
     documentVerificationStatus: string
+    verificationLastAttemptedAtEpochMs: number
   } | null
 }
 
@@ -187,13 +191,14 @@ export type VerifyIdentityDocumentMutation = {
     __typename?: 'VerifiedIdentity'
     owner: string
     verified: boolean
-    verifiedAtEpochMs?: number | null
+    verifiedAtEpochMs: number
     verificationMethod: string
     canAttemptVerificationAgain: boolean
     idScanUrl?: string | null
     requiredVerificationMethod?: string | null
     acceptableDocumentTypes: Array<string>
     documentVerificationStatus: string
+    verificationLastAttemptedAtEpochMs: number
   } | null
 }
 
@@ -266,6 +271,13 @@ export const CaptureAndVerifyIdentityDocumentDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'documentVerificationStatus' },
                 },
+                {
+                  kind: 'Field',
+                  name: {
+                    kind: 'Name',
+                    value: 'verificationLastAttemptedAtEpochMs',
+                  },
+                },
               ],
             },
           },
@@ -319,6 +331,13 @@ export const CheckIdentityVerificationDocument = {
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'documentVerificationStatus' },
+                },
+                {
+                  kind: 'Field',
+                  name: {
+                    kind: 'Name',
+                    value: 'verificationLastAttemptedAtEpochMs',
+                  },
                 },
               ],
             },
@@ -441,6 +460,13 @@ export const VerifyIdentityDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'documentVerificationStatus' },
                 },
+                {
+                  kind: 'Field',
+                  name: {
+                    kind: 'Name',
+                    value: 'verificationLastAttemptedAtEpochMs',
+                  },
+                },
               ],
             },
           },
@@ -520,6 +546,13 @@ export const VerifyIdentityDocumentDocument = {
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'documentVerificationStatus' },
+                },
+                {
+                  kind: 'Field',
+                  name: {
+                    kind: 'Name',
+                    value: 'verificationLastAttemptedAtEpochMs',
+                  },
                 },
               ],
             },

@@ -144,12 +144,13 @@ describe('SudoSecureIdVerificationClient', () => {
         ),
         requiredVerificationMethod: expectedRequiredVerificationMethod,
         documentVerificationStatus: expectedDocumentVerificationStatus,
+        verificationLastAttemptedAt: expect.any(Date),
       })
       expect(verifiedIdentity.idScanUrl).toBeFalsy()
       expect(
         [...(verifiedIdentity.acceptableDocumentTypes ?? [])].sort(),
       ).toEqual(sortedExpectedAcceptableDocumentTypes)
-      expect(verifiedIdentity.verifiedAt?.getTime()).toEqual(0)
+      expect(verifiedIdentity.verifiedAt.getTime()).toEqual(0)
     }
 
     async function validatePiiVerifiedResponse(
@@ -166,9 +167,13 @@ describe('SudoSecureIdVerificationClient', () => {
         acceptableDocumentTypes: [],
         requiredVerificationMethod: VerificationMethod.KnowledgeOfPII,
         documentVerificationStatus: DocumentVerificationStatus.NotRequired,
+        verificationLastAttemptedAt: expect.any(Date),
       })
       expect(verifiedIdentity.idScanUrl).toBeFalsy()
-      expect(verifiedIdentity.verifiedAt?.getTime()).toBeGreaterThan(0)
+      expect(verifiedIdentity.verifiedAt.getTime()).toBeGreaterThan(0)
+      expect(
+        verifiedIdentity.verificationLastAttemptedAt.getTime(),
+      ).toBeGreaterThan(0)
     }
 
     async function validateIdDocumentVerifiedResponse(
@@ -185,9 +190,13 @@ describe('SudoSecureIdVerificationClient', () => {
         acceptableDocumentTypes: [],
         requiredVerificationMethod: VerificationMethod.GovernmentID,
         documentVerificationStatus: DocumentVerificationStatus.Succeeded,
+        verificationLastAttemptedAt: expect.any(Date),
       })
       expect(verifiedIdentity.idScanUrl).toBeFalsy()
       expect(verifiedIdentity.verifiedAt?.getTime()).toBeGreaterThan(0)
+      expect(
+        verifiedIdentity.verificationLastAttemptedAt.getTime(),
+      ).toBeGreaterThan(0)
     }
 
     /**
@@ -342,15 +351,17 @@ describe('SudoSecureIdVerificationClient', () => {
       verifiedIdentity = await client.verifyIdentity(
         SimulatorPII.INVALID_IDENTITY,
       )
-      const expectedAcceptableDocumentTypes = [
+      let expectedAcceptableDocumentTypes = [
         IdDocumentType.IdCard,
         IdDocumentType.DriverLicense,
       ]
+
       await validateUnverifiedResponse(verifiedIdentity, {
         expectedAcceptableDocumentTypes,
       })
 
       verifiedIdentity = await client.checkIdentityVerification()
+      expectedAcceptableDocumentTypes = []
       await validateUnverifiedResponse(verifiedIdentity, {
         expectedAcceptableDocumentTypes,
       })

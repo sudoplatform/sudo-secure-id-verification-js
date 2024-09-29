@@ -17,11 +17,7 @@ export class VerifiedIdentityTransformer {
     return {
       owner: graphql.owner,
       verified: graphql.verified,
-      verifiedAt:
-        graphql.verifiedAtEpochMs === undefined ||
-        graphql.verifiedAtEpochMs === null
-          ? undefined
-          : new Date(graphql.verifiedAtEpochMs),
+      verifiedAt: new Date(graphql.verifiedAtEpochMs),
       verificationMethod: VerificationMethodTransformer.toEntity(
         graphql.verificationMethod,
       ),
@@ -42,6 +38,9 @@ export class VerifiedIdentityTransformer {
         DocumentVerificationStatusTransformer.toEntity(
           graphql.documentVerificationStatus,
         ),
+      verificationLastAttemptedAt: new Date(
+        graphql.verificationLastAttemptedAtEpochMs,
+      ),
     }
   }
 }

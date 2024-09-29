@@ -9,5 +9,6 @@ mutation VerifyIdentity($input: VerifyIdentityInput!) {
     requiredVerificationMethod
     acceptableDocumentTypes
     documentVerificationStatus
+    verificationLastAttemptedAtEpochMs
   }
 }

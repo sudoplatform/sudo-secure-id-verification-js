@@ -157,6 +157,9 @@ describe('SudoSecureIdVerificationClient', () => {
     })
 
     it('returns successfully with default query option', async () => {
+      const now = new Date()
+      const epoch = new Date(0)
+
       when(apiClientMock.checkIdentityVerification(anything())).thenResolve({
         owner: 'o-uuid',
         verified: false,
@@ -165,6 +168,8 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: 'KNOWLEDGE_OF_PII',
         acceptableDocumentTypes: [],
         documentVerificationStatus: 'notRequired',
+        verifiedAtEpochMs: epoch.getTime(),
+        verificationLastAttemptedAtEpochMs: now.getTime(),
       })
 
       const status = await client.checkIdentityVerification()
@@ -176,6 +181,8 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: VerificationMethod.KnowledgeOfPII,
         acceptableDocumentTypes: [],
         documentVerificationStatus: DocumentVerificationStatus.NotRequired,
+        verifiedAt: epoch,
+        verificationLastAttemptedAt: now,
       })
 
       verify(apiClientMock.checkIdentityVerification(anything())).once()
@@ -186,6 +193,9 @@ describe('SudoSecureIdVerificationClient', () => {
     })
 
     it('returns successfully with non-default query option', async () => {
+      const now = new Date()
+      const epoch = new Date(0)
+
       when(apiClientMock.checkIdentityVerification(anything())).thenResolve({
         owner: 'o-uuid',
         verified: false,
@@ -194,6 +204,8 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: 'KNOWLEDGE_OF_PII',
         acceptableDocumentTypes: [],
         documentVerificationStatus: 'notRequired',
+        verifiedAtEpochMs: epoch.getTime(),
+        verificationLastAttemptedAtEpochMs: now.getTime(),
       })
 
       const status = await client.checkIdentityVerification(
@@ -207,6 +219,8 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: VerificationMethod.KnowledgeOfPII,
         acceptableDocumentTypes: [],
         documentVerificationStatus: DocumentVerificationStatus.NotRequired,
+        verifiedAt: epoch,
+        verificationLastAttemptedAt: now,
       })
 
       verify(apiClientMock.checkIdentityVerification(anything())).once()
@@ -250,6 +264,7 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: 'KNOWLEDGE_OF_PII',
         acceptableDocumentTypes: [],
         documentVerificationStatus: 'notRequired',
+        verificationLastAttemptedAtEpochMs: now.getTime(),
       })
 
       const verifiedIdentity = await client.verifyIdentity(
@@ -264,6 +279,7 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: VerificationMethod.KnowledgeOfPII,
         acceptableDocumentTypes: [],
         documentVerificationStatus: DocumentVerificationStatus.NotRequired,
+        verificationLastAttemptedAt: now,
       })
 
       verify(apiClientMock.verifyIdentity(anything())).once()
@@ -317,6 +333,7 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: 'GOVERNMENT_ID',
         acceptableDocumentTypes: [],
         documentVerificationStatus: 'succeeded',
+        verificationLastAttemptedAtEpochMs: now.getTime(),
       })
 
       const verifiedIdentity = await client.verifyIdentityDocument(idDocument)
@@ -329,6 +346,7 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: VerificationMethod.GovernmentID,
         acceptableDocumentTypes: [],
         documentVerificationStatus: DocumentVerificationStatus.Succeeded,
+        verificationLastAttemptedAt: now,
       })
 
       verify(apiClientMock.verifyIdentityDocument(anything())).once()
@@ -342,6 +360,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
     it('returns successfully - face image supplied', async () => {
       const now = new Date()
+
       when(apiClientMock.verifyIdentityDocument(anything())).thenResolve({
         owner: 'o-uuid',
         verified: true,
@@ -351,6 +370,7 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: 'GOVERNMENT_ID',
         acceptableDocumentTypes: [],
         documentVerificationStatus: 'succeeded',
+        verificationLastAttemptedAtEpochMs: now.getTime(),
       })
 
       const idDocumentWithFaceImage: VerifyIdentityDocumentInput =
@@ -375,6 +395,7 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: VerificationMethod.GovernmentID,
         acceptableDocumentTypes: [],
         documentVerificationStatus: DocumentVerificationStatus.Succeeded,
+        verificationLastAttemptedAt: now,
       })
 
       verify(apiClientMock.verifyIdentityDocument(anything())).once()

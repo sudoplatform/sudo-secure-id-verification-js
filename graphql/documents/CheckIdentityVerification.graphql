@@ -9,5 +9,6 @@ query CheckIdentityVerification {
     requiredVerificationMethod
     acceptableDocumentTypes
     documentVerificationStatus
+    verificationLastAttemptedAtEpochMs
   }
 }

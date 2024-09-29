@@ -43,15 +43,20 @@ import { VerificationMethod } from './verificationMethod'
  *   Value indicates state of the document verification process or
  *   "notRequired" if no identity document is required to complete
  *   verification.
+ *
+ * @property {Date} verificationLastAttemptedAt
+ *   The date and time at which verification was last attempted,
+ *   whether successful or otherwise.
  */
 export interface VerifiedIdentity {
   owner: string
   verified: boolean
-  verifiedAt?: Date
+  verifiedAt: Date
   verificationMethod: VerificationMethod
   canAttemptVerificationAgain: boolean
   idScanUrl?: string
   requiredVerificationMethod?: VerificationMethod
   acceptableDocumentTypes?: IdDocumentType[]
   documentVerificationStatus: DocumentVerificationStatus
+  verificationLastAttemptedAt: Date
 }
