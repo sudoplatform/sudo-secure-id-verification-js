@@ -9,9 +9,7 @@ lib
 node_modules
 scratch
 yarn-error.log
-sampleapp/build
 .DS_Store
-sampleapp/.npmrc
 .dccache
 coverage/
 yalc-store/

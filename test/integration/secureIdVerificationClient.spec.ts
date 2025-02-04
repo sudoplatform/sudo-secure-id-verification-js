@@ -36,8 +36,13 @@ import * as SimulatorPII from '../data/simulatorPII'
 global.TextEncoder = TextEncoder
 global.TextDecoder = TextDecoder as typeof global.TextDecoder
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires,@typescript-eslint/no-unsafe-member-access
-global.crypto = require('crypto').webcrypto
+// jsdom does some crypto polyfill magic but we want to use crypto.subtle so we need to add it back in
+const localCrypto = require('crypto').webcrypto // eslint-disable-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
+global.crypto = localCrypto
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+global.crypto.subtle = localCrypto.subtle // eslint-disable-line @typescript-eslint/no-unsafe-member-access
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 global.fetch = require('node-fetch')
 
 if (typeof btoa === 'undefined') {
@@ -396,6 +401,7 @@ describe('SudoSecureIdVerificationClient', () => {
           }),
         )
         fail('Expected exception was not thrown.')
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (UnknownGraphQLError) {
         // expected
       }
@@ -514,6 +520,7 @@ describe('SudoSecureIdVerificationClient', () => {
       try {
         verifiedIdentity = await client.verifyIdentityDocument(idDocument)
         fail('Expected exception was not thrown.')
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (UnknownGraphQLError) {
         // expected
       }
