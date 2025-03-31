@@ -87,3 +87,13 @@ export class RequiredIdentityInformationNotProvidedError extends IdentityVerific
     super(msg)
   }
 }
+
+/**
+ * Returned for operations requiring an unverified identity, if verification has already
+ * completed.
+ */
+export class IdentityAlreadyVerifiedError extends IdentityVerificationError {
+  constructor(msg?: string) {
+    super(msg)
+  }
+}

@@ -20,11 +20,13 @@ import { SudoSecureIdVerificationClientPrivateOptions } from '../private/private
 import { VerifiedIdentityTransformer } from '../private/transformers/verifiedIdentityTransformer'
 import { VerifyIdentityDocumentInputTransformer } from '../private/transformers/verifyIdentityDocumentInputTransformer'
 import { VerifyIdentityInputTransformer } from '../private/transformers/verifyIdentityInputTransformer'
+import { IdentityDocumentCaptureInfoTransformer } from '../private/transformers/idDocumentCaptureInfoTransformer'
 import {
   VerificationMethod,
   VerifiedIdentity,
   VerifyIdentityDocumentInput,
   VerifyIdentityInput,
+  IdDocumentCaptureInitiationInfo,
 } from './types'
 import { QueryOption } from './types/queryOption'
 import { SudoSecureIdVerificationClientOptions } from './types/sudoIdentityVerificationClientOptions'
@@ -65,6 +67,21 @@ export interface SudoSecureIdVerificationClient {
    * @throws FatalError
    */
   isFaceImageRequired(queryOption?: QueryOption): Promise<boolean>
+
+  /**
+   * Retrieves whether initiateIdentityDocumentCapture() can be called in the configured
+   * service environment.
+   *
+   * @returns Boolean
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  isDocumentCaptureInitiationEnabled(
+    queryOption?: QueryOption,
+  ): Promise<boolean>
 
   /**
    * Queries the current identity verification status for the signed in user.
@@ -143,6 +160,20 @@ export interface SudoSecureIdVerificationClient {
   captureAndVerifyIdentityDocument(
     idDocumentInfo: VerifyIdentityDocumentInput,
   ): Promise<VerifiedIdentity>
+
+  /**
+   * Attempt to initiate ID document capture using underlying provider's web
+   * based method.
+   *
+   * @returns Information a client can use to initiate document capture.
+   *
+   * @throws NotSignedInError
+   * @throws {@link IdentityAlreadyVerifiedError}
+   * @throws ServiceError
+   * @throws UnknownGraphQLError
+   * @throws FatalError
+   */
+  initiateIdentityDocumentCapture(): Promise<IdDocumentCaptureInitiationInfo>
 }
 
 /**
@@ -230,6 +261,31 @@ export class DefaultSudoSecureIdVerificationClient
     )
     const capabilities = await this.apiClient.getCapabilities(queryOption)
     return capabilities.faceImageRequiredWithDocument
+  }
+
+  /**
+   * Retrieves whether initiateIdentityDocumentCapture() can be called in the configured
+   * service environment.
+   *
+   * @returns Boolean
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  async isDocumentCaptureInitiationEnabled(
+    queryOption?: QueryOption,
+  ): Promise<boolean> {
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
+
+    this.logger.info(
+      'Determining requirement to provide face image with ID document',
+    )
+    const capabilities = await this.apiClient.getCapabilities(queryOption)
+    return capabilities.canInitiateDocumentCapture
   }
 
   /**
@@ -374,5 +430,32 @@ export class DefaultSudoSecureIdVerificationClient
       await this.apiClient.captureAndVerifyIdentityDocument(input)
 
     return VerifiedIdentityTransformer.toEntity(verifiedIdentity)
+  }
+
+  /**
+   * Attempt to initiate ID document capture using underlying provider's web
+   * based method.
+   *
+   * @returns Information a client can use to initiate document capture.
+   *
+   * @throws NotSignedInError
+   * @throws {@link IdentityAlreadyVerifiedError}
+   * @throws ServiceError
+   * @throws UnknownGraphQLError
+   * @throws FatalError
+   */
+  async initiateIdentityDocumentCapture(): Promise<IdDocumentCaptureInitiationInfo> {
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
+
+    this.logger.info('Initiate identity document capture')
+
+    const idDocumentCaptureInitiationInfo =
+      await this.apiClient.initiateIdentityDocumentCapture()
+
+    return IdentityDocumentCaptureInfoTransformer.toEntity(
+      idDocumentCaptureInitiationInfo,
+    )
   }
 }

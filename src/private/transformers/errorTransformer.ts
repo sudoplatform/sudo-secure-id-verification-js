@@ -10,6 +10,7 @@ import {
   VersionMismatchError,
 } from '@sudoplatform/sudo-common'
 import {
+  IdentityAlreadyVerifiedError,
   IdentityVerificationRecordNotFoundError,
   IdentityVerificationUpdateFailedError,
   ImplausibleAgeError,
@@ -38,6 +39,8 @@ export class ErrorTransformer {
         return new UnsupportedCountryError(error.message)
       case 'sudoplatform.identity-verification.UnsupportedNetworkLocationError':
         return new UnsupportedNetworkLocationError(error.message)
+      case 'sudoplatform.identity-verification.IdentityAlreadyVerifiedError':
+        return new IdentityAlreadyVerifiedError(error.message)
       default:
         return mapGraphQLToClientError(error)
     }

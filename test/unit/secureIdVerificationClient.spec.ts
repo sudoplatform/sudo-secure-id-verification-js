@@ -99,6 +99,7 @@ describe('SudoSecureIdVerificationClient', () => {
       when(apiClientMock.getCapabilities(anything())).thenResolve({
         supportedCountries: ['US'],
         faceImageRequiredWithDocument: false,
+        canInitiateDocumentCapture: false,
       })
 
       let supportedCountries = await client.listSupportedCountries()
@@ -135,6 +136,7 @@ describe('SudoSecureIdVerificationClient', () => {
       when(apiClientMock.getCapabilities(anything())).thenResolve({
         supportedCountries: ['US'],
         faceImageRequiredWithDocument: false,
+        canInitiateDocumentCapture: false,
       })
 
       let isFaceImageRequired = await client.isFaceImageRequired()
@@ -145,6 +147,33 @@ describe('SudoSecureIdVerificationClient', () => {
         QueryOption.CACHE_ONLY,
       )
       expect(isFaceImageRequired).toBeFalsy()
+    })
+  })
+
+  describe('isDocumentCaptureInitiationEnabled()', () => {
+    it('throws NotSignedInError if not signed in', async () => {
+      when(sudoUserClientMock.isSignedIn()).thenResolve(false)
+      await expect(client.isDocumentCaptureInitiationEnabled()).rejects.toEqual(
+        new NotSignedInError(),
+      )
+    })
+
+    it('returns successfully', async () => {
+      // with no query option
+      when(apiClientMock.getCapabilities(anything())).thenResolve({
+        supportedCountries: ['US'],
+        faceImageRequiredWithDocument: false,
+        canInitiateDocumentCapture: true,
+      })
+
+      let canInitiateDocumentCapture =
+        await client.isDocumentCaptureInitiationEnabled()
+      expect(canInitiateDocumentCapture).toBeTruthy()
+
+      // with a query option
+      canInitiateDocumentCapture =
+        await client.isDocumentCaptureInitiationEnabled(QueryOption.CACHE_ONLY)
+      expect(canInitiateDocumentCapture).toBeTruthy()
     })
   })
 
@@ -405,6 +434,36 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(actualInput).toEqual(
         VerifyIdentityDocumentInputTransformer.toGraphQL(idDocument),
       )
+    })
+  })
+
+  describe('initiateIdentityDocumentCapture()', () => {
+    it('throws NotSignedInError if not signed in', async () => {
+      when(sudoUserClientMock.isSignedIn()).thenResolve(false)
+      await expect(client.initiateIdentityDocumentCapture()).rejects.toEqual(
+        new NotSignedInError(),
+      )
+    })
+
+    it('returns successfully', async () => {
+      // with no query option
+      when(apiClientMock.initiateIdentityDocumentCapture()).thenResolve({
+        documentCaptureUrl: 'https://mock-url',
+        expiryAtEpochSeconds: Math.floor(Date.now() / 1000),
+      })
+
+      const identityDocumentCaptureInitiationInfo =
+        await client.initiateIdentityDocumentCapture()
+      expect(identityDocumentCaptureInitiationInfo).toBeDefined()
+      expect(identityDocumentCaptureInitiationInfo.documentCaptureUrl).toEqual(
+        'https://mock-url',
+      )
+      expect(
+        identityDocumentCaptureInitiationInfo.expiryAtEpochSeconds,
+      ).toBeGreaterThan(0)
+      expect(
+        identityDocumentCaptureInitiationInfo.expiryAtEpochSeconds,
+      ).toBeLessThan(Date.now() / 1000)
     })
   })
 })

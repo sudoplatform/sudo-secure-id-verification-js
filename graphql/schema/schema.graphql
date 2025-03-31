@@ -35,12 +35,21 @@ input VerifyIdentityDocumentInput {
 type IdentityVerificationCapabilities {
   supportedCountries: [String!]!
   faceImageRequiredWithDocument: Boolean!
+  canInitiateDocumentCapture: Boolean!
+}
+
+type IdentityDocumentCaptureInitiationResponse {
+  documentCaptureUrl: String!
+  expiryAtEpochSeconds: Float!
 }
 
 type Mutation {
   verifyIdentity(input: VerifyIdentityInput): VerifiedIdentity
   verifyIdentityDocument(input: VerifyIdentityDocumentInput): VerifiedIdentity
-  captureAndVerifyIdentityDocument(input: VerifyIdentityDocumentInput): VerifiedIdentity
+  captureAndVerifyIdentityDocument(
+    input: VerifyIdentityDocumentInput
+  ): VerifiedIdentity
+  initiateIdentityDocumentCapture: IdentityDocumentCaptureInitiationResponse
 }
 
 type Query {

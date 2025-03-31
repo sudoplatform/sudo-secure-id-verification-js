@@ -27,6 +27,9 @@ import {
   VerifyIdentityDocument,
   VerifyIdentityInput,
   VerifyIdentityMutation,
+  InitiateIdentityDocumentCaptureDocument,
+  InitiateIdentityDocumentCaptureMutation,
+  IdentityDocumentCaptureInitiationResponse,
 } from '../../gen/graphql-types'
 import { QueryOption } from '../../public/types'
 import { ErrorTransformer } from '../transformers/errorTransformer'
@@ -72,7 +75,9 @@ export class ApiClient {
     if (result.data?.getIdentityVerificationCapabilities) {
       return result.data.getIdentityVerificationCapabilities
     } else {
-      throw new FatalError('isFaceImageRequired did not return any result')
+      throw new FatalError(
+        'getIdentityVerificationCapabilities did not return any result',
+      )
     }
   }
 
@@ -201,6 +206,37 @@ export class ApiClient {
       return result.data.captureAndVerifyIdentityDocument
     } else {
       throw new FatalError('unable to capture and verify identity document')
+    }
+  }
+
+  public async initiateIdentityDocumentCapture(): Promise<IdentityDocumentCaptureInitiationResponse> {
+    let result
+    try {
+      result =
+        await this._client.mutate<InitiateIdentityDocumentCaptureMutation>({
+          mutation: InitiateIdentityDocumentCaptureDocument,
+          variables: {},
+          fetchPolicy: 'no-cache',
+        })
+    } catch (err) {
+      const apolloError = err as ApolloError
+      const error = apolloError.graphQLErrors?.[0]
+      if (error) {
+        throw ErrorTransformer.toClientError(error)
+      } else {
+        throw new UnknownGraphQLError(error)
+      }
+    }
+
+    const error = result.errors?.[0]
+    if (error) {
+      throw ErrorTransformer.toClientError(error)
+    }
+
+    if (result.data?.initiateIdentityDocumentCapture) {
+      return result.data.initiateIdentityDocumentCapture
+    } else {
+      throw new FatalError('unable to initiate identity document capture')
     }
   }
 

@@ -39,8 +39,15 @@ export type Scalars = {
   AWSURL: { input: any; output: any }
 }
 
+export type IdentityDocumentCaptureInitiationResponse = {
+  __typename?: 'IdentityDocumentCaptureInitiationResponse'
+  documentCaptureUrl: Scalars['String']['output']
+  expiryAtEpochSeconds: Scalars['Float']['output']
+}
+
 export type IdentityVerificationCapabilities = {
   __typename?: 'IdentityVerificationCapabilities'
+  canInitiateDocumentCapture: Scalars['Boolean']['output']
   faceImageRequiredWithDocument: Scalars['Boolean']['output']
   supportedCountries: Array<Scalars['String']['output']>
 }
@@ -48,6 +55,7 @@ export type IdentityVerificationCapabilities = {
 export type Mutation = {
   __typename?: 'Mutation'
   captureAndVerifyIdentityDocument?: Maybe<VerifiedIdentity>
+  initiateIdentityDocumentCapture?: Maybe<IdentityDocumentCaptureInitiationResponse>
   verifyIdentity?: Maybe<VerifiedIdentity>
   verifyIdentityDocument?: Maybe<VerifiedIdentity>
 }
@@ -157,6 +165,20 @@ export type GetIdentityVerificationCapabilitiesQuery = {
     __typename?: 'IdentityVerificationCapabilities'
     supportedCountries: Array<string>
     faceImageRequiredWithDocument: boolean
+    canInitiateDocumentCapture: boolean
+  } | null
+}
+
+export type InitiateIdentityDocumentCaptureMutationVariables = Exact<{
+  [key: string]: never
+}>
+
+export type InitiateIdentityDocumentCaptureMutation = {
+  __typename?: 'Mutation'
+  initiateIdentityDocumentCapture?: {
+    __typename?: 'IdentityDocumentCaptureInitiationResponse'
+    documentCaptureUrl: string
+    expiryAtEpochSeconds: number
   } | null
 }
 
@@ -380,6 +402,10 @@ export const GetIdentityVerificationCapabilitiesDocument = {
                     value: 'faceImageRequiredWithDocument',
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'canInitiateDocumentCapture' },
+                },
               ],
             },
           },
@@ -390,6 +416,41 @@ export const GetIdentityVerificationCapabilitiesDocument = {
 } as unknown as DocumentNode<
   GetIdentityVerificationCapabilitiesQuery,
   GetIdentityVerificationCapabilitiesQueryVariables
+>
+export const InitiateIdentityDocumentCaptureDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'InitiateIdentityDocumentCapture' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'initiateIdentityDocumentCapture' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'documentCaptureUrl' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'expiryAtEpochSeconds' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  InitiateIdentityDocumentCaptureMutation,
+  InitiateIdentityDocumentCaptureMutationVariables
 >
 export const VerifyIdentityDocument = {
   kind: 'Document',

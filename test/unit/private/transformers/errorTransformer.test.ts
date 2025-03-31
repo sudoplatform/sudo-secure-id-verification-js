@@ -11,6 +11,7 @@ import {
 } from '@sudoplatform/sudo-common'
 import { v4 } from 'uuid'
 import {
+  IdentityAlreadyVerifiedError,
   IdentityVerificationRecordNotFoundError,
   IdentityVerificationUpdateFailedError,
   ImplausibleAgeError,
@@ -52,6 +53,8 @@ describe('Error Transformer Test Suite', () => {
     ${new UnsupportedNetworkLocationError(errorMsg)}
     ${'sudoplatform.identity-verification.RequiredIdentityInformationNotProvidedError'}
     ${new RequiredIdentityInformationNotProvidedError(errorMsg)}
+    ${'sudoplatform.identity-verification.IdentityAlreadyVerifiedError'}
+    ${new IdentityAlreadyVerifiedError(errorMsg)}
   `(
     'converts $appSyncErrorType to $expectedErrorType',
     ({ appSyncErrorType, expectedErrorType }) => {

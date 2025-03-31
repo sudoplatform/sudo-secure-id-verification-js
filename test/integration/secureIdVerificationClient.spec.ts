@@ -274,6 +274,12 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(remoteIsFaceImageRequired).toEqual(cachedIsFaceImageRequired)
     }, 25000)
 
+    it('document capture initiation capability', async () => {
+      await expect(
+        client.isDocumentCaptureInitiationEnabled(),
+      ).resolves.toBeDefined()
+    }, 20000)
+
     it('check idv status for newly registered user', async () => {
       const verifiedIdentity = await client.checkIdentityVerification()
       await validateUnverifiedResponse(verifiedIdentity)
@@ -547,6 +553,25 @@ describe('SudoSecureIdVerificationClient', () => {
         await client.captureAndVerifyIdentityDocument(idDocument)
       await validateIdDocumentVerifiedResponse(verifiedIdentity)
     }, 60000)
+
+    it('initiate document capture', async () => {
+      const isDocumentCaptureInitiationEnabled =
+        await client.isDocumentCaptureInitiationEnabled()
+      if (!isDocumentCaptureInitiationEnabled) {
+        console.log(
+          'Document capture initiation is not enabled in this environment.',
+        )
+        return
+      }
+
+      const documentCaptureInfo = await client.initiateIdentityDocumentCapture()
+      expect(documentCaptureInfo.documentCaptureUrl).toBeDefined()
+      expect(documentCaptureInfo.documentCaptureUrl).toMatch(/^https:\/\/.*\//)
+      expect(documentCaptureInfo.expiryAtEpochSeconds).toBeDefined()
+      expect(documentCaptureInfo.expiryAtEpochSeconds).toBeGreaterThan(
+        Date.now() / 1000,
+      )
+    })
   } else {
     it('Skip all tests.', () => {
       console.log(
