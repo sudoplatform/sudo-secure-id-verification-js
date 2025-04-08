@@ -98,7 +98,8 @@ describe('SudoSecureIdVerificationClient', () => {
       // with no query option
       when(apiClientMock.getCapabilities(anything())).thenResolve({
         supportedCountries: ['US'],
-        faceImageRequiredWithDocument: false,
+        faceImageRequiredWithDocumentCapture: false,
+        faceImageRequiredWithDocumentVerification: false,
         canInitiateDocumentCapture: false,
       })
 
@@ -123,30 +124,63 @@ describe('SudoSecureIdVerificationClient', () => {
     })
   })
 
-  describe('isFaceImageRequired()', () => {
+  describe('isFaceImageRequiredWithDocumentVerification()', () => {
     it('throws NotSignedInError if not signed in', async () => {
       when(sudoUserClientMock.isSignedIn()).thenResolve(false)
-      await expect(client.isFaceImageRequired()).rejects.toEqual(
-        new NotSignedInError(),
-      )
+      await expect(
+        client.isFaceImageRequiredWithDocumentVerification(),
+      ).rejects.toEqual(new NotSignedInError())
     })
 
     it('returns successfully', async () => {
       // with no query option
       when(apiClientMock.getCapabilities(anything())).thenResolve({
         supportedCountries: ['US'],
-        faceImageRequiredWithDocument: false,
+        faceImageRequiredWithDocumentCapture: false,
+        faceImageRequiredWithDocumentVerification: false,
         canInitiateDocumentCapture: false,
       })
 
-      let isFaceImageRequired = await client.isFaceImageRequired()
-      expect(isFaceImageRequired).toBeFalsy()
+      let isFaceImageRequiredWithDocumentVerification =
+        await client.isFaceImageRequiredWithDocumentVerification()
+      expect(isFaceImageRequiredWithDocumentVerification).toBeFalsy()
 
       // with a query option
-      isFaceImageRequired = await client.isFaceImageRequired(
-        QueryOption.CACHE_ONLY,
-      )
-      expect(isFaceImageRequired).toBeFalsy()
+      isFaceImageRequiredWithDocumentVerification =
+        await client.isFaceImageRequiredWithDocumentVerification(
+          QueryOption.CACHE_ONLY,
+        )
+      expect(isFaceImageRequiredWithDocumentVerification).toBeFalsy()
+    })
+  })
+
+  describe('isFaceImageRequiredWithDocumentCapture()', () => {
+    it('throws NotSignedInError if not signed in', async () => {
+      when(sudoUserClientMock.isSignedIn()).thenResolve(false)
+      await expect(
+        client.isFaceImageRequiredWithDocumentCapture(),
+      ).rejects.toEqual(new NotSignedInError())
+    })
+
+    it('returns successfully', async () => {
+      // with no query option
+      when(apiClientMock.getCapabilities(anything())).thenResolve({
+        supportedCountries: ['US'],
+        faceImageRequiredWithDocumentCapture: false,
+        faceImageRequiredWithDocumentVerification: false,
+        canInitiateDocumentCapture: false,
+      })
+
+      let isFaceImageRequiredWithDocumentCapture =
+        await client.isFaceImageRequiredWithDocumentCapture()
+      expect(isFaceImageRequiredWithDocumentCapture).toBeFalsy()
+
+      // with a query option
+      isFaceImageRequiredWithDocumentCapture =
+        await client.isFaceImageRequiredWithDocumentCapture(
+          QueryOption.CACHE_ONLY,
+        )
+      expect(isFaceImageRequiredWithDocumentCapture).toBeFalsy()
     })
   })
 
@@ -162,7 +196,8 @@ describe('SudoSecureIdVerificationClient', () => {
       // with no query option
       when(apiClientMock.getCapabilities(anything())).thenResolve({
         supportedCountries: ['US'],
-        faceImageRequiredWithDocument: false,
+        faceImageRequiredWithDocumentCapture: false,
+        faceImageRequiredWithDocumentVerification: false,
         canInitiateDocumentCapture: true,
       })
 

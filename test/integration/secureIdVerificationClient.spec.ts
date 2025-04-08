@@ -252,12 +252,19 @@ describe('SudoSecureIdVerificationClient', () => {
     }, 25000)
 
     it('face image requirement capability', async () => {
-      await expect(client.isFaceImageRequired()).resolves.toBeDefined()
+      await expect(
+        client.isFaceImageRequiredWithDocumentCapture(),
+      ).resolves.toBeDefined()
+      await expect(
+        client.isFaceImageRequiredWithDocumentVerification(),
+      ).resolves.toBeDefined()
     }, 20000)
 
     it('face image requirement capability - cache empty', async () => {
       try {
-        await client.isFaceImageRequired(QueryOption.CACHE_ONLY)
+        await client.isFaceImageRequiredWithDocumentVerification(
+          QueryOption.CACHE_ONLY,
+        )
       } catch (err: unknown) {
         const error = err as Error
         expect(error.name).toBe('FatalError')
@@ -266,11 +273,14 @@ describe('SudoSecureIdVerificationClient', () => {
 
     it('face image requirement capability - cache test', async () => {
       const remoteIsFaceImageRequired: boolean =
-        await client.isFaceImageRequired(QueryOption.REMOTE_ONLY)
+        await client.isFaceImageRequiredWithDocumentVerification(
+          QueryOption.REMOTE_ONLY,
+        )
 
-      const cachedIsFaceImageRequired = await client.isFaceImageRequired(
-        QueryOption.CACHE_ONLY,
-      )
+      const cachedIsFaceImageRequired =
+        await client.isFaceImageRequiredWithDocumentVerification(
+          QueryOption.CACHE_ONLY,
+        )
       expect(remoteIsFaceImageRequired).toEqual(cachedIsFaceImageRequired)
     }, 25000)
 
@@ -429,7 +439,8 @@ describe('SudoSecureIdVerificationClient', () => {
         ],
       })
 
-      const isFaceImageRequired: boolean = await client.isFaceImageRequired()
+      const isFaceImageRequired: boolean =
+        await client.isFaceImageRequiredWithDocumentVerification()
 
       let idDocument: VerifyIdentityDocumentInput
       if (isFaceImageRequired) {
@@ -457,7 +468,8 @@ describe('SudoSecureIdVerificationClient', () => {
       )
       await validatePiiVerifiedResponse(verifiedIdentity)
 
-      const isFaceImageRequired: boolean = await client.isFaceImageRequired()
+      const isFaceImageRequired: boolean =
+        await client.isFaceImageRequiredWithDocumentVerification()
 
       let idDocument: VerifyIdentityDocumentInput
       if (isFaceImageRequired) {
@@ -490,7 +502,8 @@ describe('SudoSecureIdVerificationClient', () => {
         ],
       })
 
-      const isFaceImageRequired: boolean = await client.isFaceImageRequired()
+      const isFaceImageRequired: boolean =
+        await client.isFaceImageRequiredWithDocumentVerification()
 
       let idDocument: VerifyIdentityDocumentInput
       if (isFaceImageRequired) {
@@ -536,7 +549,8 @@ describe('SudoSecureIdVerificationClient', () => {
       let verifiedIdentity = await client.checkIdentityVerification()
       await validateUnverifiedResponse(verifiedIdentity)
 
-      const isFaceImageRequired: boolean = await client.isFaceImageRequired()
+      const isFaceImageRequired: boolean =
+        await client.isFaceImageRequiredWithDocumentCapture()
 
       let idDocument: VerifyIdentityDocumentInput
       if (isFaceImageRequired) {

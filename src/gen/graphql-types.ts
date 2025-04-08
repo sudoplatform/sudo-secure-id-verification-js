@@ -48,7 +48,8 @@ export type IdentityDocumentCaptureInitiationResponse = {
 export type IdentityVerificationCapabilities = {
   __typename?: 'IdentityVerificationCapabilities'
   canInitiateDocumentCapture: Scalars['Boolean']['output']
-  faceImageRequiredWithDocument: Scalars['Boolean']['output']
+  faceImageRequiredWithDocumentCapture: Scalars['Boolean']['output']
+  faceImageRequiredWithDocumentVerification: Scalars['Boolean']['output']
   supportedCountries: Array<Scalars['String']['output']>
 }
 
@@ -164,7 +165,8 @@ export type GetIdentityVerificationCapabilitiesQuery = {
   getIdentityVerificationCapabilities?: {
     __typename?: 'IdentityVerificationCapabilities'
     supportedCountries: Array<string>
-    faceImageRequiredWithDocument: boolean
+    faceImageRequiredWithDocumentCapture: boolean
+    faceImageRequiredWithDocumentVerification: boolean
     canInitiateDocumentCapture: boolean
   } | null
 }
@@ -399,7 +401,14 @@ export const GetIdentityVerificationCapabilitiesDocument = {
                   kind: 'Field',
                   name: {
                     kind: 'Name',
-                    value: 'faceImageRequiredWithDocument',
+                    value: 'faceImageRequiredWithDocumentCapture',
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: {
+                    kind: 'Name',
+                    value: 'faceImageRequiredWithDocumentVerification',
                   },
                 },
                 {

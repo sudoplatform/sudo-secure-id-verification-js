@@ -66,7 +66,24 @@ export interface SudoSecureIdVerificationClient {
    * @throws ServiceError
    * @throws FatalError
    */
-  isFaceImageRequired(queryOption?: QueryOption): Promise<boolean>
+  isFaceImageRequiredWithDocumentVerification(
+    queryOption?: QueryOption,
+  ): Promise<boolean>
+
+  /**
+   * Retrieves whether face images must be provided as part of ID document
+   * capture.
+   *
+   * @returns Boolean
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  isFaceImageRequiredWithDocumentCapture(
+    queryOption?: QueryOption,
+  ): Promise<boolean>
 
   /**
    * Retrieves whether initiateIdentityDocumentCapture() can be called in the configured
@@ -251,16 +268,43 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws ServiceError
    * @throws FatalError
    */
-  async isFaceImageRequired(queryOption?: QueryOption): Promise<boolean> {
+  async isFaceImageRequiredWithDocumentVerification(
+    queryOption?: QueryOption,
+  ): Promise<boolean> {
     if (!(await this.sudoUserClient.isSignedIn())) {
       throw new NotSignedInError()
     }
 
     this.logger.info(
-      'Determining requirement to provide face image with ID document',
+      'Determining requirement to provide face image with ID document verification.',
     )
     const capabilities = await this.apiClient.getCapabilities(queryOption)
-    return capabilities.faceImageRequiredWithDocument
+    return capabilities.faceImageRequiredWithDocumentVerification
+  }
+
+  /**
+   * Retrieves whether face images must be provided as part of ID document
+   * capture.
+   *
+   * @returns Boolean
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  async isFaceImageRequiredWithDocumentCapture(
+    queryOption?: QueryOption,
+  ): Promise<boolean> {
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
+
+    this.logger.info(
+      'Determining requirement to provide face image with ID document capture.',
+    )
+    const capabilities = await this.apiClient.getCapabilities(queryOption)
+    return capabilities.faceImageRequiredWithDocumentCapture
   }
 
   /**

@@ -34,7 +34,8 @@ input VerifyIdentityDocumentInput {
 
 type IdentityVerificationCapabilities {
   supportedCountries: [String!]!
-  faceImageRequiredWithDocument: Boolean!
+  faceImageRequiredWithDocumentCapture: Boolean!
+  faceImageRequiredWithDocumentVerification: Boolean!
   canInitiateDocumentCapture: Boolean!
 }
 
