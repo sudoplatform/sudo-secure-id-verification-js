@@ -9,6 +9,7 @@ type VerifiedIdentity {
   acceptableDocumentTypes: [String!]!
   documentVerificationStatus: String!
   verificationLastAttemptedAtEpochMs: Float!
+  attemptsRemaining: Int!
 }
 
 input VerifyIdentityInput {

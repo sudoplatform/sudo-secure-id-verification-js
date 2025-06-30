@@ -13,3 +13,5 @@ yarn-error.log
 .dccache
 coverage/
 yalc-store/
+
+.yarn/install-state.gz

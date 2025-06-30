@@ -234,6 +234,7 @@ describe('SudoSecureIdVerificationClient', () => {
         documentVerificationStatus: 'notRequired',
         verifiedAtEpochMs: epoch.getTime(),
         verificationLastAttemptedAtEpochMs: now.getTime(),
+        attemptsRemaining: 2,
       })
 
       const status = await client.checkIdentityVerification()
@@ -247,6 +248,7 @@ describe('SudoSecureIdVerificationClient', () => {
         documentVerificationStatus: DocumentVerificationStatus.NotRequired,
         verifiedAt: epoch,
         verificationLastAttemptedAt: now,
+        attemptsRemaining: 2,
       })
 
       verify(apiClientMock.checkIdentityVerification(anything())).once()
@@ -270,6 +272,7 @@ describe('SudoSecureIdVerificationClient', () => {
         documentVerificationStatus: 'notRequired',
         verifiedAtEpochMs: epoch.getTime(),
         verificationLastAttemptedAtEpochMs: now.getTime(),
+        attemptsRemaining: 2,
       })
 
       const status = await client.checkIdentityVerification(
@@ -285,6 +288,7 @@ describe('SudoSecureIdVerificationClient', () => {
         documentVerificationStatus: DocumentVerificationStatus.NotRequired,
         verifiedAt: epoch,
         verificationLastAttemptedAt: now,
+        attemptsRemaining: 2,
       })
 
       verify(apiClientMock.checkIdentityVerification(anything())).once()
@@ -329,6 +333,7 @@ describe('SudoSecureIdVerificationClient', () => {
         acceptableDocumentTypes: [],
         documentVerificationStatus: 'notRequired',
         verificationLastAttemptedAtEpochMs: now.getTime(),
+        attemptsRemaining: 0,
       })
 
       const verifiedIdentity = await client.verifyIdentity(
@@ -344,6 +349,7 @@ describe('SudoSecureIdVerificationClient', () => {
         acceptableDocumentTypes: [],
         documentVerificationStatus: DocumentVerificationStatus.NotRequired,
         verificationLastAttemptedAt: now,
+        attemptsRemaining: 0,
       })
 
       verify(apiClientMock.verifyIdentity(anything())).once()
@@ -398,6 +404,7 @@ describe('SudoSecureIdVerificationClient', () => {
         acceptableDocumentTypes: [],
         documentVerificationStatus: 'succeeded',
         verificationLastAttemptedAtEpochMs: now.getTime(),
+        attemptsRemaining: 0,
       })
 
       const verifiedIdentity = await client.verifyIdentityDocument(idDocument)
@@ -411,6 +418,7 @@ describe('SudoSecureIdVerificationClient', () => {
         acceptableDocumentTypes: [],
         documentVerificationStatus: DocumentVerificationStatus.Succeeded,
         verificationLastAttemptedAt: now,
+        attemptsRemaining: 0,
       })
 
       verify(apiClientMock.verifyIdentityDocument(anything())).once()
@@ -435,6 +443,7 @@ describe('SudoSecureIdVerificationClient', () => {
         acceptableDocumentTypes: [],
         documentVerificationStatus: 'succeeded',
         verificationLastAttemptedAtEpochMs: now.getTime(),
+        attemptsRemaining: 2,
       })
 
       const idDocumentWithFaceImage: VerifyIdentityDocumentInput =
@@ -460,6 +469,7 @@ describe('SudoSecureIdVerificationClient', () => {
         acceptableDocumentTypes: [],
         documentVerificationStatus: DocumentVerificationStatus.Succeeded,
         verificationLastAttemptedAt: now,
+        attemptsRemaining: 2,
       })
 
       verify(apiClientMock.verifyIdentityDocument(anything())).once()

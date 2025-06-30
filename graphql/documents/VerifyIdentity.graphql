@@ -10,5 +10,6 @@ mutation VerifyIdentity($input: VerifyIdentityInput!) {
     acceptableDocumentTypes
     documentVerificationStatus
     verificationLastAttemptedAtEpochMs
+    attemptsRemaining
   }
 }

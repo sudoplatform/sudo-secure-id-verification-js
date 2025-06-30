@@ -41,6 +41,7 @@ export class VerifiedIdentityTransformer {
       verificationLastAttemptedAt: new Date(
         graphql.verificationLastAttemptedAtEpochMs,
       ),
+      attemptsRemaining: graphql.attemptsRemaining,
     }
   }
 }

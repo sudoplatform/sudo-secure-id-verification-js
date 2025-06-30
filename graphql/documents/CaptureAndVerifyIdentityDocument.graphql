@@ -12,5 +12,6 @@ mutation CaptureAndVerifyIdentityDocument(
     acceptableDocumentTypes
     documentVerificationStatus
     verificationLastAttemptedAtEpochMs
+    attemptsRemaining
   }
 }

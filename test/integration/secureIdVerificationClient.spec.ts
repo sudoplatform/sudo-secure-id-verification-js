@@ -150,12 +150,14 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: expectedRequiredVerificationMethod,
         documentVerificationStatus: expectedDocumentVerificationStatus,
         verificationLastAttemptedAt: expect.any(Date),
+        attemptsRemaining: expect.any(Number),
       })
       expect(verifiedIdentity.idScanUrl).toBeFalsy()
       expect(
         [...(verifiedIdentity.acceptableDocumentTypes ?? [])].sort(),
       ).toEqual(sortedExpectedAcceptableDocumentTypes)
       expect(verifiedIdentity.verifiedAt.getTime()).toEqual(0)
+      expect(verifiedIdentity.attemptsRemaining).toBeGreaterThan(0)
     }
 
     async function validatePiiVerifiedResponse(
@@ -173,6 +175,7 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: VerificationMethod.KnowledgeOfPII,
         documentVerificationStatus: DocumentVerificationStatus.NotRequired,
         verificationLastAttemptedAt: expect.any(Date),
+        attemptsRemaining: 0,
       })
       expect(verifiedIdentity.idScanUrl).toBeFalsy()
       expect(verifiedIdentity.verifiedAt.getTime()).toBeGreaterThan(0)
@@ -196,6 +199,7 @@ describe('SudoSecureIdVerificationClient', () => {
         requiredVerificationMethod: VerificationMethod.GovernmentID,
         documentVerificationStatus: DocumentVerificationStatus.Succeeded,
         verificationLastAttemptedAt: expect.any(Date),
+        attemptsRemaining: 0,
       })
       expect(verifiedIdentity.idScanUrl).toBeFalsy()
       expect(verifiedIdentity.verifiedAt?.getTime()).toBeGreaterThan(0)
@@ -392,6 +396,7 @@ describe('SudoSecureIdVerificationClient', () => {
       // Needs different data for each invocation otherwise repeated attempts with the same data
       // in a small time frame are ignored by the IDV service.
       let attempt = 1
+      let lastAttemptsRemaining = 999 // for checking that attemptsRemaining is monotonic decreasing
       while (true) {
         const verifiedIdentity = await client.verifyIdentity(
           Object.assign({}, SimulatorPII.INVALID_IDENTITY, {
@@ -400,9 +405,16 @@ describe('SudoSecureIdVerificationClient', () => {
         )
         expect(verifiedIdentity.verified).toBeFalsy()
         if (!verifiedIdentity.canAttemptVerificationAgain) {
+          expect(verifiedIdentity.attemptsRemaining).toBe(0)
           break
+        } else {
+          expect(verifiedIdentity.attemptsRemaining).toBeGreaterThan(0)
+          expect(verifiedIdentity.attemptsRemaining).toBeLessThan(
+            lastAttemptsRemaining,
+          )
         }
         attempt++
+        lastAttemptsRemaining = verifiedIdentity.attemptsRemaining
       }
     }, 60000)
 

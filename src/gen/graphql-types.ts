@@ -82,6 +82,7 @@ export type Query = {
 export type VerifiedIdentity = {
   __typename?: 'VerifiedIdentity'
   acceptableDocumentTypes: Array<Scalars['String']['output']>
+  attemptsRemaining: Scalars['Int']['output']
   canAttemptVerificationAgain: Scalars['Boolean']['output']
   documentVerificationStatus: Scalars['String']['output']
   idScanUrl?: Maybe<Scalars['String']['output']>
@@ -132,6 +133,7 @@ export type CaptureAndVerifyIdentityDocumentMutation = {
     acceptableDocumentTypes: Array<string>
     documentVerificationStatus: string
     verificationLastAttemptedAtEpochMs: number
+    attemptsRemaining: number
   } | null
 }
 
@@ -153,6 +155,7 @@ export type CheckIdentityVerificationQuery = {
     acceptableDocumentTypes: Array<string>
     documentVerificationStatus: string
     verificationLastAttemptedAtEpochMs: number
+    attemptsRemaining: number
   } | null
 }
 
@@ -202,6 +205,7 @@ export type VerifyIdentityMutation = {
     acceptableDocumentTypes: Array<string>
     documentVerificationStatus: string
     verificationLastAttemptedAtEpochMs: number
+    attemptsRemaining: number
   } | null
 }
 
@@ -223,6 +227,7 @@ export type VerifyIdentityDocumentMutation = {
     acceptableDocumentTypes: Array<string>
     documentVerificationStatus: string
     verificationLastAttemptedAtEpochMs: number
+    attemptsRemaining: number
   } | null
 }
 
@@ -302,6 +307,10 @@ export const CaptureAndVerifyIdentityDocumentDocument = {
                     value: 'verificationLastAttemptedAtEpochMs',
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'attemptsRemaining' },
+                },
               ],
             },
           },
@@ -362,6 +371,10 @@ export const CheckIdentityVerificationDocument = {
                     kind: 'Name',
                     value: 'verificationLastAttemptedAtEpochMs',
                   },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'attemptsRemaining' },
                 },
               ],
             },
@@ -537,6 +550,10 @@ export const VerifyIdentityDocument = {
                     value: 'verificationLastAttemptedAtEpochMs',
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'attemptsRemaining' },
+                },
               ],
             },
           },
@@ -623,6 +640,10 @@ export const VerifyIdentityDocumentDocument = {
                     kind: 'Name',
                     value: 'verificationLastAttemptedAtEpochMs',
                   },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'attemptsRemaining' },
                 },
               ],
             },

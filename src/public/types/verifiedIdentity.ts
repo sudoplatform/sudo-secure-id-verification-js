@@ -47,6 +47,9 @@ import { VerificationMethod } from './verificationMethod'
  * @property {Date} verificationLastAttemptedAt
  *   The date and time at which verification was last attempted,
  *   whether successful or otherwise.
+ *
+ * @property {number} attemptsRemaining
+ *   The number of attempts remaining for the user to verify their identity.
  */
 export interface VerifiedIdentity {
   owner: string
@@ -59,4 +62,5 @@ export interface VerifiedIdentity {
   acceptableDocumentTypes?: IdDocumentType[]
   documentVerificationStatus: DocumentVerificationStatus
   verificationLastAttemptedAt: Date
+  attemptsRemaining: number
 }
