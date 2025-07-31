@@ -11,13 +11,16 @@ import {
 } from '@sudoplatform/sudo-common'
 import {
   IdentityAlreadyVerifiedError,
+  IdentityCaptureRetriesExceededError,
+  IdentityCaptureRetryBlockedError,
+  IdentityDataRedactedError,
   IdentityVerificationRecordNotFoundError,
   IdentityVerificationUpdateFailedError,
   ImplausibleAgeError,
   InvalidAgeError,
   UnsupportedCountryError,
-  UnsupportedVerificationMethodError,
   UnsupportedNetworkLocationError,
+  UnsupportedVerificationMethodError,
 } from '../..'
 
 export class ErrorTransformer {
@@ -41,6 +44,12 @@ export class ErrorTransformer {
         return new UnsupportedNetworkLocationError(error.message)
       case 'sudoplatform.identity-verification.IdentityAlreadyVerifiedError':
         return new IdentityAlreadyVerifiedError(error.message)
+      case 'sudoplatform.identity-verification.IdentityCaptureRetriesExceededError':
+        return new IdentityCaptureRetriesExceededError(error.message)
+      case 'sudoplatform.identity-verification.IdentityCaptureRetryBlockedError':
+        return new IdentityCaptureRetryBlockedError(error.message)
+      case 'sudoplatform.identity-verification.IdentityDataRedactedError':
+        return new IdentityDataRedactedError(error.message)
       default:
         return mapGraphQLToClientError(error)
     }

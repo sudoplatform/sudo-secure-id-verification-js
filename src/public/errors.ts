@@ -97,3 +97,31 @@ export class IdentityAlreadyVerifiedError extends IdentityVerificationError {
     super(msg)
   }
 }
+
+/**
+ * Identity document capture attempts has been exceeded.
+ */
+export class IdentityCaptureRetriesExceededError extends IdentityVerificationError {
+  constructor(msg?: string) {
+    super(msg)
+  }
+}
+
+/**
+ * Identity document capture additional attempts has been prevented.
+ */
+export class IdentityCaptureRetryBlockedError extends IdentityVerificationError {
+  constructor(msg?: string) {
+    super(msg)
+  }
+}
+
+/**
+ * Identity data retrieval attempted for a user whose data has been redacted due to
+ * policy or is no longer available.
+ */
+export class IdentityDataRedactedError extends IdentityVerificationError {
+  constructor(msg?: string) {
+    super(msg)
+  }
+}

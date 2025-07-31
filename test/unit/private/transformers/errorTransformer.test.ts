@@ -12,14 +12,17 @@ import {
 import { v4 } from 'uuid'
 import {
   IdentityAlreadyVerifiedError,
+  IdentityCaptureRetriesExceededError,
+  IdentityCaptureRetryBlockedError,
+  IdentityDataRedactedError,
   IdentityVerificationRecordNotFoundError,
   IdentityVerificationUpdateFailedError,
   ImplausibleAgeError,
   InvalidAgeError,
-  UnsupportedCountryError,
-  UnsupportedVerificationMethodError,
-  UnsupportedNetworkLocationError,
   RequiredIdentityInformationNotProvidedError,
+  UnsupportedCountryError,
+  UnsupportedNetworkLocationError,
+  UnsupportedVerificationMethodError,
 } from '../../../../src'
 import { ErrorTransformer } from '../../../../src/private/transformers/errorTransformer'
 
@@ -55,6 +58,12 @@ describe('Error Transformer Test Suite', () => {
     ${new RequiredIdentityInformationNotProvidedError(errorMsg)}
     ${'sudoplatform.identity-verification.IdentityAlreadyVerifiedError'}
     ${new IdentityAlreadyVerifiedError(errorMsg)}
+    ${'sudoplatform.identity-verification.IdentityCaptureRetriesExceededError'}
+    ${new IdentityCaptureRetriesExceededError(errorMsg)}
+    ${'sudoplatform.identity-verification.IdentityCaptureRetryBlockedError'}
+    ${new IdentityCaptureRetryBlockedError(errorMsg)}
+    ${'sudoplatform.identity-verification.IdentityDataRedactedError'}
+    ${new IdentityDataRedactedError(errorMsg)}
   `(
     'converts $appSyncErrorType to $expectedErrorType',
     ({ appSyncErrorType, expectedErrorType }) => {
