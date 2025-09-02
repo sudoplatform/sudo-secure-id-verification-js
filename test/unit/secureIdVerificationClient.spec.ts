@@ -101,6 +101,7 @@ describe('SudoSecureIdVerificationClient', () => {
         faceImageRequiredWithDocumentCapture: false,
         faceImageRequiredWithDocumentVerification: false,
         canInitiateDocumentCapture: false,
+        consentRequired: false,
       })
 
       let supportedCountries = await client.listSupportedCountries()
@@ -139,6 +140,7 @@ describe('SudoSecureIdVerificationClient', () => {
         faceImageRequiredWithDocumentCapture: false,
         faceImageRequiredWithDocumentVerification: false,
         canInitiateDocumentCapture: false,
+        consentRequired: false,
       })
 
       let isFaceImageRequiredWithDocumentVerification =
@@ -169,6 +171,7 @@ describe('SudoSecureIdVerificationClient', () => {
         faceImageRequiredWithDocumentCapture: false,
         faceImageRequiredWithDocumentVerification: false,
         canInitiateDocumentCapture: false,
+        consentRequired: false,
       })
 
       let isFaceImageRequiredWithDocumentCapture =
@@ -199,6 +202,7 @@ describe('SudoSecureIdVerificationClient', () => {
         faceImageRequiredWithDocumentCapture: false,
         faceImageRequiredWithDocumentVerification: false,
         canInitiateDocumentCapture: true,
+        consentRequired: false,
       })
 
       let canInitiateDocumentCapture =
@@ -509,6 +513,137 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(
         identityDocumentCaptureInitiationInfo.expiryAtEpochSeconds,
       ).toBeLessThan(Date.now() / 1000)
+    })
+  })
+
+  describe('getIdentityDataProcessingConsentContent()', () => {
+    it('throws NotSignedInError if not signed in', async () => {
+      when(sudoUserClientMock.isSignedIn()).thenResolve(false)
+      await expect(
+        client.getIdentityDataProcessingConsentContent({
+          preferredContentType: 'text/html',
+          preferredLocale: 'en-US',
+        }),
+      ).rejects.toEqual(new NotSignedInError())
+    })
+
+    it('returns successfully', async () => {
+      when(
+        apiClientMock.getIdentityDataProcessingConsentContent(
+          anything(),
+          anything(),
+        ),
+      ).thenResolve({
+        content: '<p>Consent</p>',
+        contentType: 'text/html',
+        locale: 'en-US',
+      })
+      const result = await client.getIdentityDataProcessingConsentContent({
+        preferredContentType: 'text/html',
+        preferredLocale: 'en-US',
+      })
+      expect(result).toEqual({
+        content: '<p>Consent</p>',
+        contentType: 'text/html',
+        locale: 'en-US',
+      })
+      verify(
+        apiClientMock.getIdentityDataProcessingConsentContent(
+          anything(),
+          anything(),
+        ),
+      ).once()
+    })
+  })
+
+  describe('getIdentityDataProcessingConsentStatus()', () => {
+    it('throws NotSignedInError if not signed in', async () => {
+      when(sudoUserClientMock.isSignedIn()).thenResolve(false)
+      await expect(
+        client.getIdentityDataProcessingConsentStatus(),
+      ).rejects.toEqual(new NotSignedInError())
+    })
+
+    it('returns successfully', async () => {
+      when(
+        apiClientMock.getIdentityDataProcessingConsentStatus(anything()),
+      ).thenResolve({
+        consented: true,
+        consentedAtEpochMs: 123456789,
+        consentWithdrawnAtEpochMs: undefined,
+        content: '<p>Consent</p>',
+        contentType: 'text/html',
+        locale: 'en-US',
+      })
+      const result = await client.getIdentityDataProcessingConsentStatus()
+      expect(result).toEqual({
+        consented: true,
+        consentedAtEpochMs: 123456789,
+        consentWithdrawnAtEpochMs: undefined,
+        content: '<p>Consent</p>',
+        contentType: 'text/html',
+        locale: 'en-US',
+      })
+      verify(
+        apiClientMock.getIdentityDataProcessingConsentStatus(anything()),
+      ).once()
+    })
+  })
+
+  describe('provideIdentityDataProcessingConsent()', () => {
+    it('throws NotSignedInError if not signed in', async () => {
+      when(sudoUserClientMock.isSignedIn()).thenResolve(false)
+      await expect(
+        client.provideIdentityDataProcessingConsent({
+          content: '<p>Consent</p>',
+          contentType: 'text/html',
+          locale: 'en-US',
+        }),
+      ).rejects.toEqual(new NotSignedInError())
+    })
+
+    it('returns successfully and transforms input', async () => {
+      when(
+        apiClientMock.provideIdentityDataProcessingConsent(anything()),
+      ).thenResolve({
+        processed: true,
+      })
+      const result = await client.provideIdentityDataProcessingConsent({
+        content: '<p>Consent</p>',
+        contentType: 'text/html',
+        locale: 'en-US',
+      })
+      expect(result).toEqual({ processed: true })
+      verify(
+        apiClientMock.provideIdentityDataProcessingConsent(anything()),
+      ).once()
+
+      const [arg1] = capture(
+        apiClientMock.provideIdentityDataProcessingConsent,
+      ).first()
+      expect(arg1).toMatchObject({
+        content: '<p>Consent</p>',
+        contentType: 'text/html',
+        locale: 'en-US',
+      })
+    })
+  })
+
+  describe('withdrawIdentityDataProcessingConsent()', () => {
+    it('throws NotSignedInError if not signed in', async () => {
+      when(sudoUserClientMock.isSignedIn()).thenResolve(false)
+      await expect(
+        client.withdrawIdentityDataProcessingConsent(),
+      ).rejects.toEqual(new NotSignedInError())
+    })
+
+    it('returns successfully', async () => {
+      when(apiClientMock.withdrawIdentityDataProcessingConsent()).thenResolve({
+        processed: true,
+      })
+      const result = await client.withdrawIdentityDataProcessingConsent()
+      expect(result).toEqual({ processed: true })
+      verify(apiClientMock.withdrawIdentityDataProcessingConsent()).once()
     })
   })
 })

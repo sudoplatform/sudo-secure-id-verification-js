@@ -11,5 +11,6 @@ mutation VerifyIdentity($input: VerifyIdentityInput!) {
     documentVerificationStatus
     verificationLastAttemptedAtEpochMs
     attemptsRemaining
+    consented
   }
 }

@@ -11,6 +11,7 @@ import {
 } from '@sudoplatform/sudo-common'
 import { v4 } from 'uuid'
 import {
+  ConsentRequiredError,
   IdentityAlreadyVerifiedError,
   IdentityCaptureRetriesExceededError,
   IdentityCaptureRetryBlockedError,
@@ -64,6 +65,8 @@ describe('Error Transformer Test Suite', () => {
     ${new IdentityCaptureRetryBlockedError(errorMsg)}
     ${'sudoplatform.identity-verification.IdentityDataRedactedError'}
     ${new IdentityDataRedactedError(errorMsg)}
+    ${'sudoplatform.identity-verification.ConsentRequiredError'}
+    ${new ConsentRequiredError(errorMsg)}
   `(
     'converts $appSyncErrorType to $expectedErrorType',
     ({ appSyncErrorType, expectedErrorType }) => {

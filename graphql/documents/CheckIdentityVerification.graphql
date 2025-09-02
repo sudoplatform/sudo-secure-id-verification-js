@@ -11,5 +11,6 @@ query CheckIdentityVerification {
     documentVerificationStatus
     verificationLastAttemptedAtEpochMs
     attemptsRemaining
+    consented
   }
 }

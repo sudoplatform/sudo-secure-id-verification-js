@@ -63,4 +63,5 @@ export interface VerifiedIdentity {
   documentVerificationStatus: DocumentVerificationStatus
   verificationLastAttemptedAt: Date
   attemptsRemaining: number
+  consented?: boolean
 }

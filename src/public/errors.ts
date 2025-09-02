@@ -125,3 +125,12 @@ export class IdentityDataRedactedError extends IdentityVerificationError {
     super(msg)
   }
 }
+
+/**
+ * Identity verification processing was attempted before consent was recorded.
+ */
+export class ConsentRequiredError extends IdentityVerificationError {
+  constructor(msg?: string) {
+    super(msg)
+  }
+}

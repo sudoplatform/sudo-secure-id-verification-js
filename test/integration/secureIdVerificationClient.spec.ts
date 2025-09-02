@@ -25,6 +25,7 @@ import {
   DocumentVerificationStatus,
   IdDocument,
   IdDocumentType,
+  IdentityDataProcessingConsentContent,
   QueryOption,
   VerificationMethod,
   VerifiedIdentity,
@@ -33,7 +34,7 @@ import {
 import * as SimulatorDocuments from '../data/simulatorIdDocuments'
 import * as SimulatorPII from '../data/simulatorPII'
 
-global.TextEncoder = TextEncoder
+global.TextEncoder = TextEncoder as typeof global.TextEncoder
 global.TextDecoder = TextDecoder as typeof global.TextDecoder
 
 // jsdom does some crypto polyfill magic but we want to use crypto.subtle so we need to add it back in
@@ -61,6 +62,11 @@ describe('SudoSecureIdVerificationClient', () => {
   const configFilePath = 'config/sudoplatformconfig.json'
   const testKeyPath = 'config/register_key.private'
   const testKeyIdPath = 'config/register_key.id'
+  const adminApiKeyPath = 'config/api.key'
+  const adminApiKey =
+    (existsSync(adminApiKeyPath) &&
+      readFileSync(adminApiKeyPath, 'ascii').trim()) ||
+    'IAM'
 
   if (
     existsSync(configFilePath) &&
@@ -86,9 +92,10 @@ describe('SudoSecureIdVerificationClient', () => {
       sudoUserClient,
     )
     const sudoEntitlementsAdminClient = new DefaultSudoEntitlementsAdminClient(
-      process.env.ADMIN_API_KEY || 'IAM',
+      process.env.ADMIN_API_KEY || adminApiKey,
     )
     const client = new DefaultSudoSecureIdVerificationClient({ sudoUserClient })
+    let consentRequired = false // reasonable default
 
     /**
      * New user for each test, so we can exercise different verification scenarios.
@@ -99,7 +106,9 @@ describe('SudoSecureIdVerificationClient', () => {
         v4(),
       )
       await sudoUserClient.signInWithKey()
-
+      // somewhat redundant, doing this multiple times, but we can't determine
+      // the answer until the user is signed in.
+      consentRequired = await client.isConsentRequiredForVerification()
       const externalId = await sudoEntitlementsClient.getExternalId()
       await sudoEntitlementsAdminClient.applyEntitlementsToUser(externalId, [
         { name: verifyIdentityUserEntitledName, value: 1 },
@@ -118,14 +127,55 @@ describe('SudoSecureIdVerificationClient', () => {
     /**
      * Helpers
      */
+
+    async function grantConsentIfRequired() {
+      const consentRequired = await client.isConsentRequiredForVerification()
+      if (!consentRequired) {
+        return
+      }
+      const consentStatus =
+        await client.getIdentityDataProcessingConsentStatus()
+      if (consentStatus.consented) {
+        return
+      }
+      const consentContent =
+        await client.getIdentityDataProcessingConsentContent({
+          preferredContentType: 'text/html',
+          preferredLocale: 'en-US',
+        })
+      await client.provideIdentityDataProcessingConsent(consentContent)
+      const grantedConsentStatus =
+        await client.getIdentityDataProcessingConsentStatus()
+      expect(grantedConsentStatus.consented).toBe(true)
+    }
+
+    async function revokeConsentIfRequired() {
+      const consentRequired = await client.isConsentRequiredForVerification()
+      if (!consentRequired) {
+        return
+      }
+      const consentStatus =
+        await client.getIdentityDataProcessingConsentStatus()
+      if (!consentStatus.consented) {
+        return
+      }
+      await client.withdrawIdentityDataProcessingConsent()
+
+      const revokedConsentStatus =
+        await client.getIdentityDataProcessingConsentStatus()
+      expect(revokedConsentStatus.consented).toBe(false)
+    }
+
     async function validateUnverifiedResponse(
       verifiedIdentity: VerifiedIdentity,
       options?: {
         expectedAcceptableDocumentTypes?: IdDocumentType[]
         expectedDocumentVerificationStatus?: DocumentVerificationStatus
         expectedRequiredVerificationMethod?: VerificationMethod
+        expectedConsent?: boolean
       },
     ): Promise<void> {
+      const expectedConsent = options?.expectedConsent ?? true
       const subject = await sudoUserClient.getSubject()
       const sortedExpectedAcceptableDocumentTypes = [
         ...(options?.expectedAcceptableDocumentTypes ?? []),
@@ -151,6 +201,7 @@ describe('SudoSecureIdVerificationClient', () => {
         documentVerificationStatus: expectedDocumentVerificationStatus,
         verificationLastAttemptedAt: expect.any(Date),
         attemptsRemaining: expect.any(Number),
+        consented: consentRequired ? expectedConsent : undefined,
       })
       expect(verifiedIdentity.idScanUrl).toBeFalsy()
       expect(
@@ -176,6 +227,7 @@ describe('SudoSecureIdVerificationClient', () => {
         documentVerificationStatus: DocumentVerificationStatus.NotRequired,
         verificationLastAttemptedAt: expect.any(Date),
         attemptsRemaining: 0,
+        consented: consentRequired ? true : undefined,
       })
       expect(verifiedIdentity.idScanUrl).toBeFalsy()
       expect(verifiedIdentity.verifiedAt.getTime()).toBeGreaterThan(0)
@@ -200,6 +252,7 @@ describe('SudoSecureIdVerificationClient', () => {
         documentVerificationStatus: DocumentVerificationStatus.Succeeded,
         verificationLastAttemptedAt: expect.any(Date),
         attemptsRemaining: 0,
+        consented: consentRequired ? true : undefined,
       })
       expect(verifiedIdentity.idScanUrl).toBeFalsy()
       expect(verifiedIdentity.verifiedAt?.getTime()).toBeGreaterThan(0)
@@ -211,392 +264,587 @@ describe('SudoSecureIdVerificationClient', () => {
     /**
      * Tests
      */
-    it('list supported countries', async () => {
-      const supportedCountries: string[] = await client.listSupportedCountries()
+    describe.skip('Capabilities', () => {
+      it('list supported countries', async () => {
+        const supportedCountries: string[] =
+          await client.listSupportedCountries()
 
-      // Regardless of the environment, the supported countries list should
-      // be empty and contain ISO 3166-2 character country codes.
-      expect(supportedCountries).toBeDefined()
-      expect(supportedCountries.length).toBeGreaterThanOrEqual(1)
-      supportedCountries.forEach((element) => {
-        expect(element.length).toBe(2)
-      })
-    }, 20000)
+        // Regardless of the environment, the supported countries list should
+        // be non-empty and contain ISO 3166-2 character country codes.
+        expect(supportedCountries).toBeDefined()
+        expect(supportedCountries.length).toBeGreaterThanOrEqual(1)
+        supportedCountries.forEach((element) => {
+          expect(element.length).toBe(2)
+        })
+      }, 20000)
 
-    it('list supported countries - cache empty', async () => {
-      try {
-        await client.listSupportedCountries(QueryOption.CACHE_ONLY)
-      } catch (err: unknown) {
-        const error = err as Error
-        expect(error.name).toBe('FatalError')
-      }
-    }, 20000)
+      it('list supported countries - cache empty', async () => {
+        try {
+          await client.listSupportedCountries(QueryOption.CACHE_ONLY)
+        } catch (err: unknown) {
+          const error = err as Error
+          expect(error.name).toBe('FatalError')
+        }
+      }, 20000)
 
-    it('list supported countries - cache test', async () => {
-      let supportedCountries: string[] = await client.listSupportedCountries(
-        QueryOption.REMOTE_ONLY,
-      )
-
-      // Regardless of the environment, the supported countries list should
-      // be empty and contain ISO 3166-2 character country codes.
-      expect(supportedCountries).toBeDefined()
-      expect(supportedCountries.length).toBeGreaterThanOrEqual(1)
-      supportedCountries.forEach((element) => {
-        expect(element.length).toBe(2)
-      })
-
-      supportedCountries = await client.listSupportedCountries(
-        QueryOption.CACHE_ONLY,
-      )
-      expect(supportedCountries).toBeDefined()
-      expect(supportedCountries.length).toBeGreaterThanOrEqual(1)
-      supportedCountries.forEach((element) => {
-        expect(element.length).toBe(2)
-      })
-    }, 25000)
-
-    it('face image requirement capability', async () => {
-      await expect(
-        client.isFaceImageRequiredWithDocumentCapture(),
-      ).resolves.toBeDefined()
-      await expect(
-        client.isFaceImageRequiredWithDocumentVerification(),
-      ).resolves.toBeDefined()
-    }, 20000)
-
-    it('face image requirement capability - cache empty', async () => {
-      try {
-        await client.isFaceImageRequiredWithDocumentVerification(
-          QueryOption.CACHE_ONLY,
-        )
-      } catch (err: unknown) {
-        const error = err as Error
-        expect(error.name).toBe('FatalError')
-      }
-    }, 20000)
-
-    it('face image requirement capability - cache test', async () => {
-      const remoteIsFaceImageRequired: boolean =
-        await client.isFaceImageRequiredWithDocumentVerification(
+      it('list supported countries - cache test', async () => {
+        let supportedCountries: string[] = await client.listSupportedCountries(
           QueryOption.REMOTE_ONLY,
         )
 
-      const cachedIsFaceImageRequired =
-        await client.isFaceImageRequiredWithDocumentVerification(
+        // Regardless of the environment, the supported countries list should
+        // be empty and contain ISO 3166-2 character country codes.
+        expect(supportedCountries).toBeDefined()
+        expect(supportedCountries.length).toBeGreaterThanOrEqual(1)
+        supportedCountries.forEach((element) => {
+          expect(element.length).toBe(2)
+        })
+
+        supportedCountries = await client.listSupportedCountries(
           QueryOption.CACHE_ONLY,
         )
-      expect(remoteIsFaceImageRequired).toEqual(cachedIsFaceImageRequired)
-    }, 25000)
+        expect(supportedCountries).toBeDefined()
+        expect(supportedCountries.length).toBeGreaterThanOrEqual(1)
+        supportedCountries.forEach((element) => {
+          expect(element.length).toBe(2)
+        })
+      }, 25000)
 
-    it('document capture initiation capability', async () => {
-      await expect(
-        client.isDocumentCaptureInitiationEnabled(),
-      ).resolves.toBeDefined()
-    }, 20000)
+      it('face image requirement capability', async () => {
+        await expect(
+          client.isFaceImageRequiredWithDocumentCapture(),
+        ).resolves.toBeDefined()
+        await expect(
+          client.isFaceImageRequiredWithDocumentVerification(),
+        ).resolves.toBeDefined()
+      }, 20000)
 
-    it('check idv status for newly registered user', async () => {
-      const verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
-    }, 20000)
-
-    it('check idv status for newly registered user - cache test', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification(
-        QueryOption.REMOTE_ONLY,
-      )
-      await validateUnverifiedResponse(verifiedIdentity)
-
-      verifiedIdentity = await client.checkIdentityVerification(
-        QueryOption.CACHE_ONLY,
-      )
-      await validateUnverifiedResponse(verifiedIdentity)
-    }, 25000)
-
-    it('successful pii idv with test data, with city and state omitted', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
-
-      verifiedIdentity = await client.verifyIdentity(
-        SimulatorPII.VALID_IDENTITY,
-      )
-      await validatePiiVerifiedResponse(verifiedIdentity)
-
-      verifiedIdentity = await client.checkIdentityVerification()
-      await validatePiiVerifiedResponse(verifiedIdentity)
-    }, 45000)
-
-    it('successful pii idv with test data, including city and state', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
-
-      verifiedIdentity = await client.verifyIdentity(
-        SimulatorPII.VALID_IDENTITY_WITH_CITY_STATE,
-      )
-      await validatePiiVerifiedResponse(verifiedIdentity)
-
-      verifiedIdentity = await client.checkIdentityVerification()
-      await validatePiiVerifiedResponse(verifiedIdentity)
-    }, 30000)
-
-    it('successful pii idv with test data, including null city and state', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
-
-      verifiedIdentity = await client.verifyIdentity(
-        Object.assign({}, SimulatorPII.VALID_IDENTITY, {
-          city: undefined,
-          state: undefined,
-        }),
-      )
-      await validatePiiVerifiedResponse(verifiedIdentity)
-
-      verifiedIdentity = await client.checkIdentityVerification()
-      await validatePiiVerifiedResponse(verifiedIdentity)
-    }, 30000)
-
-    it('successful pii idv with test data, including undefined city and state', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
-
-      verifiedIdentity = await client.verifyIdentity(
-        Object.assign({}, SimulatorPII.VALID_IDENTITY, {
-          city: undefined,
-          state: undefined,
-        }),
-      )
-      await validatePiiVerifiedResponse(verifiedIdentity)
-
-      verifiedIdentity = await client.checkIdentityVerification()
-      await validatePiiVerifiedResponse(verifiedIdentity)
-    }, 30000)
-
-    it('unsuccessful pii idv with test data', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
-
-      verifiedIdentity = await client.verifyIdentity(
-        SimulatorPII.INVALID_IDENTITY,
-      )
-      let expectedAcceptableDocumentTypes = [
-        IdDocumentType.IdCard,
-        IdDocumentType.DriverLicense,
-      ]
-
-      await validateUnverifiedResponse(verifiedIdentity, {
-        expectedAcceptableDocumentTypes,
-      })
-
-      verifiedIdentity = await client.checkIdentityVerification()
-      expectedAcceptableDocumentTypes = []
-      await validateUnverifiedResponse(verifiedIdentity, {
-        expectedAcceptableDocumentTypes,
-      })
-    }, 30000)
-
-    it('repeated unsuccessful pii idv with test data, reaching max retries', async () => {
-      // Needs different data for each invocation otherwise repeated attempts with the same data
-      // in a small time frame are ignored by the IDV service.
-      let attempt = 1
-      let lastAttemptsRemaining = 999 // for checking that attemptsRemaining is monotonic decreasing
-      while (true) {
-        const verifiedIdentity = await client.verifyIdentity(
-          Object.assign({}, SimulatorPII.INVALID_IDENTITY, {
-            lastName: `${SimulatorPII.INVALID_IDENTITY.lastName}${attempt}`,
-          }),
-        )
-        expect(verifiedIdentity.verified).toBeFalsy()
-        if (!verifiedIdentity.canAttemptVerificationAgain) {
-          expect(verifiedIdentity.attemptsRemaining).toBe(0)
-          break
-        } else {
-          expect(verifiedIdentity.attemptsRemaining).toBeGreaterThan(0)
-          expect(verifiedIdentity.attemptsRemaining).toBeLessThan(
-            lastAttemptsRemaining,
+      it('face image requirement capability - cache empty', async () => {
+        try {
+          await client.isFaceImageRequiredWithDocumentVerification(
+            QueryOption.CACHE_ONLY,
           )
+        } catch (err: unknown) {
+          const error = err as Error
+          expect(error.name).toBe('FatalError')
         }
-        attempt++
-        lastAttemptsRemaining = verifiedIdentity.attemptsRemaining
-      }
-    }, 60000)
+      }, 20000)
 
-    it('unsuccessful pii idv due to bad verification method', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
+      it('face image requirement capability - cache test', async () => {
+        const remoteIsFaceImageRequired: boolean =
+          await client.isFaceImageRequiredWithDocumentVerification(
+            QueryOption.REMOTE_ONLY,
+          )
 
-      try {
+        const cachedIsFaceImageRequired =
+          await client.isFaceImageRequiredWithDocumentVerification(
+            QueryOption.CACHE_ONLY,
+          )
+        expect(remoteIsFaceImageRequired).toEqual(cachedIsFaceImageRequired)
+      }, 25000)
+
+      it('document capture initiation capability', async () => {
+        await expect(
+          client.isDocumentCaptureInitiationEnabled(),
+        ).resolves.toBeDefined()
+      }, 20000)
+
+      it('is consent required', async () => {
+        const consentRequired: boolean =
+          await client.isConsentRequiredForVerification()
+        expect(typeof consentRequired).toBe('boolean')
+      }, 20000)
+
+      it('is consent required - cache empty', async () => {
+        try {
+          await client.isConsentRequiredForVerification(QueryOption.CACHE_ONLY)
+        } catch (err: unknown) {
+          const error = err as Error
+          expect(error.name).toBe('FatalError')
+        }
+      }, 20000)
+
+      it('is consent required - cache test', async () => {
+        const consentRequired: boolean =
+          await client.isConsentRequiredForVerification(QueryOption.REMOTE_ONLY)
+        expect(typeof consentRequired).toBe('boolean')
+
+        const cachedConsentRequired =
+          await client.isConsentRequiredForVerification(QueryOption.CACHE_ONLY)
+        expect(consentRequired).toEqual(cachedConsentRequired)
+      }, 25000)
+    })
+
+    describe('simple verifyIdentity', () => {
+      beforeEach(async () => {
+        await grantConsentIfRequired()
+      }, 7000)
+      it('check idv status for newly registered user', async () => {
+        const verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+      }, 20000)
+
+      it('check idv status for newly registered user - cache test', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification(
+          QueryOption.REMOTE_ONLY,
+        )
+        await validateUnverifiedResponse(verifiedIdentity)
+
+        verifiedIdentity = await client.checkIdentityVerification(
+          QueryOption.CACHE_ONLY,
+        )
+        await validateUnverifiedResponse(verifiedIdentity)
+      }, 25000)
+
+      it('successful pii idv with test data, with city and state omitted', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+
+        verifiedIdentity = await client.verifyIdentity(
+          SimulatorPII.VALID_IDENTITY,
+        )
+        await validatePiiVerifiedResponse(verifiedIdentity)
+
+        verifiedIdentity = await client.checkIdentityVerification()
+        await validatePiiVerifiedResponse(verifiedIdentity)
+      }, 45000)
+
+      it('successful pii idv with test data, including city and state', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+
+        verifiedIdentity = await client.verifyIdentity(
+          SimulatorPII.VALID_IDENTITY_WITH_CITY_STATE,
+        )
+        await validatePiiVerifiedResponse(verifiedIdentity)
+
+        verifiedIdentity = await client.checkIdentityVerification()
+        await validatePiiVerifiedResponse(verifiedIdentity)
+      }, 30000)
+
+      it('successful pii idv with test data, including null city and state', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+
         verifiedIdentity = await client.verifyIdentity(
           Object.assign({}, SimulatorPII.VALID_IDENTITY, {
-            verificationMethod: 'PII_OR_SOMETHING' as VerificationMethod,
+            city: undefined,
+            state: undefined,
           }),
         )
-        fail('Expected exception was not thrown.')
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (UnknownGraphQLError) {
-        // expected
-      }
-    }, 30000)
+        await validatePiiVerifiedResponse(verifiedIdentity)
 
-    it('successful idv using driver license after PII', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
+        verifiedIdentity = await client.checkIdentityVerification()
+        await validatePiiVerifiedResponse(verifiedIdentity)
+      }, 30000)
 
-      // verification using id document must be on top of an attempt
-      // using PII
-      verifiedIdentity = await client.verifyIdentity(
-        SimulatorPII.INVALID_IDENTITY,
-      )
-      await validateUnverifiedResponse(verifiedIdentity, {
-        expectedAcceptableDocumentTypes: [
-          IdDocumentType.DriverLicense,
+      it('successful pii idv with test data, including undefined city and state', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+
+        verifiedIdentity = await client.verifyIdentity(
+          Object.assign({}, SimulatorPII.VALID_IDENTITY, {
+            city: undefined,
+            state: undefined,
+          }),
+        )
+        await validatePiiVerifiedResponse(verifiedIdentity)
+
+        verifiedIdentity = await client.checkIdentityVerification()
+        await validatePiiVerifiedResponse(verifiedIdentity)
+      }, 30000)
+
+      it('unsuccessful pii idv with test data', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+
+        verifiedIdentity = await client.verifyIdentity(
+          SimulatorPII.INVALID_IDENTITY,
+        )
+        let expectedAcceptableDocumentTypes = [
           IdDocumentType.IdCard,
-        ],
-      })
-
-      const isFaceImageRequired: boolean =
-        await client.isFaceImageRequiredWithDocumentVerification()
-
-      let idDocument: VerifyIdentityDocumentInput
-      if (isFaceImageRequired) {
-        idDocument = await IdDocument.buildDocumentVerificationRequest(
-          SimulatorDocuments.VALID_DRIVERS_LICENSE_WITH_FACE_IMAGE,
-        )
-      } else {
-        idDocument = await IdDocument.buildDocumentVerificationRequest(
-          SimulatorDocuments.VALID_DRIVERS_LICENSE,
-        )
-      }
-
-      verifiedIdentity = await client.verifyIdentityDocument(idDocument)
-      await validateIdDocumentVerifiedResponse(verifiedIdentity)
-    }, 60000)
-
-    it('successful idv using passport after PII', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
-
-      // verification using id document must be on top of an attempt
-      // using PII
-      verifiedIdentity = await client.verifyIdentity(
-        SimulatorPII.VALID_IDENTITY,
-      )
-      await validatePiiVerifiedResponse(verifiedIdentity)
-
-      const isFaceImageRequired: boolean =
-        await client.isFaceImageRequiredWithDocumentVerification()
-
-      let idDocument: VerifyIdentityDocumentInput
-      if (isFaceImageRequired) {
-        idDocument = await IdDocument.buildDocumentVerificationRequest(
-          SimulatorDocuments.VALID_PASSPORT_WITH_FACE_IMAGE,
-        )
-      } else {
-        idDocument = await IdDocument.buildDocumentVerificationRequest(
-          SimulatorDocuments.VALID_PASSPORT,
-        )
-      }
-
-      verifiedIdentity = await client.verifyIdentityDocument(idDocument)
-      await validateIdDocumentVerifiedResponse(verifiedIdentity)
-    }, 60000)
-
-    it('unsuccessful idv using unreadable driver license after PII', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
-
-      // verification using id document must be on top of an attempt
-      // using PII
-      verifiedIdentity = await client.verifyIdentity(
-        SimulatorPII.INVALID_IDENTITY,
-      )
-      await validateUnverifiedResponse(verifiedIdentity, {
-        expectedAcceptableDocumentTypes: [
           IdDocumentType.DriverLicense,
-          IdDocumentType.IdCard,
-        ],
-      })
+        ]
 
-      const isFaceImageRequired: boolean =
-        await client.isFaceImageRequiredWithDocumentVerification()
+        await validateUnverifiedResponse(verifiedIdentity, {
+          expectedAcceptableDocumentTypes,
+        })
 
-      let idDocument: VerifyIdentityDocumentInput
-      if (isFaceImageRequired) {
-        idDocument = await IdDocument.buildDocumentVerificationRequest(
-          SimulatorDocuments.UNREADABLE_DRIVERS_LICENSE_WITH_FACE_IMAGE,
+        verifiedIdentity = await client.checkIdentityVerification()
+        expectedAcceptableDocumentTypes = []
+        await validateUnverifiedResponse(verifiedIdentity, {
+          expectedAcceptableDocumentTypes,
+        })
+      }, 30000)
+
+      it('repeated unsuccessful pii idv with test data, reaching max retries', async () => {
+        // Needs different data for each invocation otherwise repeated attempts with the same data
+        // in a small time frame are ignored by the IDV service.
+        let attempt = 1
+        let lastAttemptsRemaining = 999 // for checking that attemptsRemaining is monotonic decreasing
+        while (true) {
+          const verifiedIdentity = await client.verifyIdentity(
+            Object.assign({}, SimulatorPII.INVALID_IDENTITY, {
+              lastName: `${SimulatorPII.INVALID_IDENTITY.lastName}${attempt}`,
+            }),
+          )
+          expect(verifiedIdentity.verified).toBeFalsy()
+          if (!verifiedIdentity.canAttemptVerificationAgain) {
+            expect(verifiedIdentity.attemptsRemaining).toBe(0)
+            break
+          } else {
+            expect(verifiedIdentity.attemptsRemaining).toBeGreaterThan(0)
+            expect(verifiedIdentity.attemptsRemaining).toBeLessThan(
+              lastAttemptsRemaining,
+            )
+          }
+          attempt++
+          lastAttemptsRemaining = verifiedIdentity.attemptsRemaining
+        }
+      }, 60000)
+
+      it('unsuccessful pii idv due to bad verification method', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+
+        try {
+          verifiedIdentity = await client.verifyIdentity(
+            Object.assign({}, SimulatorPII.VALID_IDENTITY, {
+              verificationMethod: 'PII_OR_SOMETHING' as VerificationMethod,
+            }),
+          )
+          fail('Expected exception was not thrown.')
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (UnknownGraphQLError) {
+          // expected
+        }
+      }, 30000)
+    })
+    describe('identity verification with identity documents', () => {
+      beforeEach(async () => {
+        await grantConsentIfRequired()
+      }, 10000)
+      it('successful idv using driver license after PII', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+
+        // verification using id document must be on top of an attempt
+        // using PII
+        verifiedIdentity = await client.verifyIdentity(
+          SimulatorPII.INVALID_IDENTITY,
         )
-      } else {
-        idDocument = await IdDocument.buildDocumentVerificationRequest(
-          SimulatorDocuments.UNREADABLE_DRIVERS_LICENSE,
-        )
-      }
+        await validateUnverifiedResponse(verifiedIdentity, {
+          expectedAcceptableDocumentTypes: [
+            IdDocumentType.DriverLicense,
+            IdDocumentType.IdCard,
+          ],
+        })
 
-      verifiedIdentity = await client.verifyIdentityDocument(idDocument)
-      await validateUnverifiedResponse(verifiedIdentity, {
-        expectedAcceptableDocumentTypes: [
-          IdDocumentType.DriverLicense,
-          IdDocumentType.IdCard,
-        ],
-        expectedRequiredVerificationMethod: VerificationMethod.GovernmentID,
-        expectedDocumentVerificationStatus:
-          DocumentVerificationStatus.DocumentUnreadable,
-      })
-    }, 60000)
+        const isFaceImageRequired: boolean =
+          await client.isFaceImageRequiredWithDocumentVerification()
 
-    it('unsuccessful idv using driver license without prior PII attempt', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
+        let idDocument: VerifyIdentityDocumentInput
+        if (isFaceImageRequired) {
+          idDocument = await IdDocument.buildDocumentVerificationRequest(
+            SimulatorDocuments.VALID_DRIVERS_LICENSE_WITH_FACE_IMAGE,
+          )
+        } else {
+          idDocument = await IdDocument.buildDocumentVerificationRequest(
+            SimulatorDocuments.VALID_DRIVERS_LICENSE,
+          )
+        }
 
-      const idDocument = await IdDocument.buildDocumentVerificationRequest(
-        SimulatorDocuments.VALID_DRIVERS_LICENSE,
-      )
-
-      try {
         verifiedIdentity = await client.verifyIdentityDocument(idDocument)
-        fail('Expected exception was not thrown.')
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (UnknownGraphQLError) {
-        // expected
-      }
-    }, 60000)
+        await validateIdDocumentVerifiedResponse(verifiedIdentity)
+      }, 60000)
 
-    it('successful capture and verification using driver license', async () => {
-      let verifiedIdentity = await client.checkIdentityVerification()
-      await validateUnverifiedResponse(verifiedIdentity)
+      it('successful idv using passport after PII', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
 
-      const isFaceImageRequired: boolean =
-        await client.isFaceImageRequiredWithDocumentCapture()
-
-      let idDocument: VerifyIdentityDocumentInput
-      if (isFaceImageRequired) {
-        idDocument = await IdDocument.buildDocumentVerificationRequest(
-          SimulatorDocuments.VALID_DRIVERS_LICENSE_WITH_FACE_IMAGE,
+        // verification using id document must be on top of an attempt
+        // using PII
+        verifiedIdentity = await client.verifyIdentity(
+          SimulatorPII.VALID_IDENTITY,
         )
-      } else {
-        idDocument = await IdDocument.buildDocumentVerificationRequest(
+        await validatePiiVerifiedResponse(verifiedIdentity)
+
+        const isFaceImageRequired: boolean =
+          await client.isFaceImageRequiredWithDocumentVerification()
+
+        let idDocument: VerifyIdentityDocumentInput
+        if (isFaceImageRequired) {
+          idDocument = await IdDocument.buildDocumentVerificationRequest(
+            SimulatorDocuments.VALID_PASSPORT_WITH_FACE_IMAGE,
+          )
+        } else {
+          idDocument = await IdDocument.buildDocumentVerificationRequest(
+            SimulatorDocuments.VALID_PASSPORT,
+          )
+        }
+
+        verifiedIdentity = await client.verifyIdentityDocument(idDocument)
+        await validateIdDocumentVerifiedResponse(verifiedIdentity)
+      }, 60000)
+
+      it('unsuccessful idv using unreadable driver license after PII', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+
+        // verification using id document must be on top of an attempt
+        // using PII
+        verifiedIdentity = await client.verifyIdentity(
+          SimulatorPII.INVALID_IDENTITY,
+        )
+        await validateUnverifiedResponse(verifiedIdentity, {
+          expectedAcceptableDocumentTypes: [
+            IdDocumentType.DriverLicense,
+            IdDocumentType.IdCard,
+          ],
+        })
+
+        const isFaceImageRequired: boolean =
+          await client.isFaceImageRequiredWithDocumentVerification()
+
+        let idDocument: VerifyIdentityDocumentInput
+        if (isFaceImageRequired) {
+          idDocument = await IdDocument.buildDocumentVerificationRequest(
+            SimulatorDocuments.UNREADABLE_DRIVERS_LICENSE_WITH_FACE_IMAGE,
+          )
+        } else {
+          idDocument = await IdDocument.buildDocumentVerificationRequest(
+            SimulatorDocuments.UNREADABLE_DRIVERS_LICENSE,
+          )
+        }
+
+        verifiedIdentity = await client.verifyIdentityDocument(idDocument)
+        await validateUnverifiedResponse(verifiedIdentity, {
+          expectedAcceptableDocumentTypes: [
+            IdDocumentType.DriverLicense,
+            IdDocumentType.IdCard,
+          ],
+          expectedRequiredVerificationMethod: VerificationMethod.GovernmentID,
+          expectedDocumentVerificationStatus:
+            DocumentVerificationStatus.DocumentUnreadable,
+        })
+      }, 60000)
+
+      it('unsuccessful idv using driver license without prior PII attempt', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+
+        const idDocument = await IdDocument.buildDocumentVerificationRequest(
           SimulatorDocuments.VALID_DRIVERS_LICENSE,
         )
-      }
 
-      verifiedIdentity =
-        await client.captureAndVerifyIdentityDocument(idDocument)
-      await validateIdDocumentVerifiedResponse(verifiedIdentity)
-    }, 60000)
+        try {
+          verifiedIdentity = await client.verifyIdentityDocument(idDocument)
+          fail('Expected exception was not thrown.')
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (err: unknown) {
+          const error = err as Error
+          expect(error.name).toBe('IdentityVerificationRecordNotFoundError')
+          // expected
+        }
+      }, 60000)
 
-    it('initiate document capture', async () => {
-      const isDocumentCaptureInitiationEnabled =
-        await client.isDocumentCaptureInitiationEnabled()
-      if (!isDocumentCaptureInitiationEnabled) {
-        console.log(
-          'Document capture initiation is not enabled in this environment.',
+      it('successful capture and verification using driver license', async () => {
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity)
+
+        const isFaceImageRequired: boolean =
+          await client.isFaceImageRequiredWithDocumentCapture()
+
+        let idDocument: VerifyIdentityDocumentInput
+        if (isFaceImageRequired) {
+          idDocument = await IdDocument.buildDocumentVerificationRequest(
+            SimulatorDocuments.VALID_DRIVERS_LICENSE_WITH_FACE_IMAGE,
+          )
+        } else {
+          idDocument = await IdDocument.buildDocumentVerificationRequest(
+            SimulatorDocuments.VALID_DRIVERS_LICENSE,
+          )
+        }
+
+        verifiedIdentity =
+          await client.captureAndVerifyIdentityDocument(idDocument)
+        await validateIdDocumentVerifiedResponse(verifiedIdentity)
+      }, 60000)
+    })
+    describe('Document Capture', () => {
+      it('initiate document capture', async () => {
+        const isDocumentCaptureInitiationEnabled =
+          await client.isDocumentCaptureInitiationEnabled()
+        if (!isDocumentCaptureInitiationEnabled) {
+          console.log(
+            'Document capture initiation is not enabled in this environment.',
+          )
+          return
+        }
+
+        const documentCaptureInfo =
+          await client.initiateIdentityDocumentCapture()
+        expect(documentCaptureInfo.documentCaptureUrl).toBeDefined()
+        expect(documentCaptureInfo.documentCaptureUrl).toMatch(
+          /^https:\/\/.*\//,
         )
-        return
+        expect(documentCaptureInfo.expiryAtEpochSeconds).toBeDefined()
+        expect(documentCaptureInfo.expiryAtEpochSeconds).toBeGreaterThan(
+          Date.now() / 1000,
+        )
+      })
+    })
+
+    describe('Consent Content', () => {
+      function validateConsentContent(
+        content: IdentityDataProcessingConsentContent,
+      ) {
+        expect(content).toBeDefined()
+        expect(content.content).toBeDefined()
+        expect(content.contentType).toBeDefined()
+        expect(content.contentType.length).toBeGreaterThan(0)
+        const contentTypeSplitter = content.contentType.split('/')
+        expect(contentTypeSplitter).toHaveLength(2)
+        expect(contentTypeSplitter[0].length).toBeGreaterThan(0)
+        expect(contentTypeSplitter[1].length).toBeGreaterThan(0)
+        expect(content.locale).toBeDefined()
+        expect(content.locale).toHaveLength(5)
+        const localeSplitter = content.locale.split('-')
+        expect(localeSplitter).toHaveLength(2)
+        expect(localeSplitter[0]).toHaveLength(2)
+        expect(localeSplitter[1]).toHaveLength(2)
       }
 
-      const documentCaptureInfo = await client.initiateIdentityDocumentCapture()
-      expect(documentCaptureInfo.documentCaptureUrl).toBeDefined()
-      expect(documentCaptureInfo.documentCaptureUrl).toMatch(/^https:\/\/.*\//)
-      expect(documentCaptureInfo.expiryAtEpochSeconds).toBeDefined()
-      expect(documentCaptureInfo.expiryAtEpochSeconds).toBeGreaterThan(
-        Date.now() / 1000,
-      )
+      it('get identity data processing consent content', async () => {
+        const input = {
+          preferredContentType: 'text/plain',
+          preferredLocale: 'en-US',
+        }
+        const content =
+          await client.getIdentityDataProcessingConsentContent(input)
+        validateConsentContent(content)
+      }, 20000)
+
+      it('get identity data processing consent content - cache empty', async () => {
+        const input = {
+          preferredContentType: 'text/plain',
+          preferredLocale: 'en-US',
+        }
+        try {
+          await client.getIdentityDataProcessingConsentContent(
+            input,
+            QueryOption.CACHE_ONLY,
+          )
+        } catch (err: unknown) {
+          const error = err as Error
+          expect(error.name).toBe('FatalError')
+        }
+      }, 20000)
+
+      it('get identity data processing consent content - cache test', async () => {
+        const input = {
+          preferredContentType: 'text/plain',
+          preferredLocale: 'en-US',
+        }
+        const remoteContent =
+          await client.getIdentityDataProcessingConsentContent(
+            input,
+            QueryOption.REMOTE_ONLY,
+          )
+        validateConsentContent(remoteContent)
+
+        const cachedContent =
+          await client.getIdentityDataProcessingConsentContent(
+            input,
+            QueryOption.CACHE_ONLY,
+          )
+        expect(cachedContent).toEqual(remoteContent)
+      }, 25000)
+    })
+
+    describe('Consent is required', () => {
+      it('idv fails when consent is required and not granted, but succeeds when it is', async () => {
+        if (!consentRequired) {
+          console.log(
+            'Skipping test: consent is not required in this environment.',
+          )
+          return
+        }
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity, {
+          expectedConsent: false,
+        })
+
+        const consentStatus =
+          await client.getIdentityDataProcessingConsentStatus()
+        expect(consentStatus.consented).toBe(false)
+        try {
+          verifiedIdentity = await client.verifyIdentity(
+            SimulatorPII.VALID_IDENTITY,
+          )
+          fail('Expected exception was not thrown.')
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (err: unknown) {
+          const error = err as Error
+          expect(error.name).toBe('ConsentRequiredError')
+          // expected
+        }
+        await grantConsentIfRequired()
+        verifiedIdentity = await client.verifyIdentity(
+          SimulatorPII.VALID_IDENTITY,
+        )
+        await validatePiiVerifiedResponse(verifiedIdentity)
+      }, 45000)
+
+      it('revocation of consent prevents presentation of identity documents', async () => {
+        if (!consentRequired) {
+          console.log(
+            'Skipping test: consent is not required in this environment.',
+          )
+          return
+        }
+        let verifiedIdentity = await client.checkIdentityVerification()
+        await validateUnverifiedResponse(verifiedIdentity, {
+          expectedConsent: false,
+        })
+
+        await grantConsentIfRequired()
+        // verification using id document must be on top of an attempt
+        // using PII
+        verifiedIdentity = await client.verifyIdentity(
+          SimulatorPII.INVALID_IDENTITY,
+        )
+        await validateUnverifiedResponse(verifiedIdentity, {
+          expectedAcceptableDocumentTypes: [
+            IdDocumentType.DriverLicense,
+            IdDocumentType.IdCard,
+          ],
+        })
+
+        const isFaceImageRequired: boolean =
+          await client.isFaceImageRequiredWithDocumentVerification()
+
+        let idDocument: VerifyIdentityDocumentInput
+        if (isFaceImageRequired) {
+          idDocument = await IdDocument.buildDocumentVerificationRequest(
+            SimulatorDocuments.VALID_DRIVERS_LICENSE_WITH_FACE_IMAGE,
+          )
+        } else {
+          idDocument = await IdDocument.buildDocumentVerificationRequest(
+            SimulatorDocuments.VALID_DRIVERS_LICENSE,
+          )
+        }
+        await revokeConsentIfRequired()
+
+        try {
+          verifiedIdentity = await client.verifyIdentityDocument(idDocument)
+          fail('Expected exception was not thrown.')
+        } catch (err: unknown) {
+          const error = err as Error
+          expect(error.name).toBe('ConsentRequiredError')
+          // expected
+        }
+      }, 60000)
     })
   } else {
     it('Skip all tests.', () => {

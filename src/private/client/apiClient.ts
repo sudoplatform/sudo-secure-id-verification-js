@@ -30,9 +30,23 @@ import {
   InitiateIdentityDocumentCaptureDocument,
   InitiateIdentityDocumentCaptureMutation,
   IdentityDocumentCaptureInitiationResponse,
+  IdentityDataProcessingConsentContentInput,
+  IdentityDataProcessingConsentResponse,
+  IdentityDataProcessingConsentInput,
+  IdentityDataProcessingConsentStatus,
+  GetIdentityDataProcessingConsentContentQuery,
+  GetIdentityDataProcessingConsentContentDocument,
+  GetIdentityDataProcessingConsentStatusQuery,
+  GetIdentityDataProcessingConsentStatusDocument,
+  ProvideIdentityDataProcessingConsentMutation,
+  ProvideIdentityDataProcessingConsentDocument,
+  WithdrawIdentityDataProcessingConsentMutation,
+  WithdrawIdentityDataProcessingConsentDocument,
+  IdentityDataProcessingConsentContent,
 } from '../../gen/graphql-types'
 import { QueryOption } from '../../public/types'
 import { ErrorTransformer } from '../transformers/errorTransformer'
+import { configNamespace } from '../config'
 
 /**
  * AppSync wrapper to use to invoke Sudo Secure ID Verification Service APIs.
@@ -44,7 +58,10 @@ export class ApiClient {
     const clientManager =
       apiClientManager ?? DefaultApiClientManager.getInstance()
 
-    this._client = clientManager.getClient({ disableOffline: true })
+    this._client = clientManager.getClient({
+      disableOffline: true,
+      configNamespace: configNamespace,
+    })
   }
 
   public async getCapabilities(
@@ -109,6 +126,137 @@ export class ApiClient {
       return result.data.checkIdentityVerification
     } else {
       throw new FatalError('unable to retrieve identity verification status')
+    }
+  }
+
+  public async getIdentityDataProcessingConsentContent(
+    input: IdentityDataProcessingConsentContentInput,
+    queryOption?: QueryOption,
+  ): Promise<IdentityDataProcessingConsentContent> {
+    let result
+    try {
+      result =
+        await this._client.query<GetIdentityDataProcessingConsentContentQuery>({
+          query: GetIdentityDataProcessingConsentContentDocument,
+          variables: { input },
+          fetchPolicy: queryOption || QueryOption.REMOTE_ONLY,
+        })
+    } catch (err) {
+      const apolloError = err as ApolloError
+      const error = apolloError.graphQLErrors?.[0]
+      if (error) {
+        throw ErrorTransformer.toClientError(error)
+      } else {
+        throw new UnknownGraphQLError(error)
+      }
+    }
+    const error = result.errors?.[0]
+    if (error) {
+      throw ErrorTransformer.toClientError(error)
+    }
+    if (result.data?.getIdentityDataProcessingConsentContent) {
+      return result.data.getIdentityDataProcessingConsentContent
+    } else {
+      throw new FatalError(
+        'unable to get identity data processing consent content',
+      )
+    }
+  }
+
+  public async getIdentityDataProcessingConsentStatus(
+    queryOption?: QueryOption,
+  ): Promise<IdentityDataProcessingConsentStatus> {
+    let result
+    try {
+      result =
+        await this._client.query<GetIdentityDataProcessingConsentStatusQuery>({
+          query: GetIdentityDataProcessingConsentStatusDocument,
+          fetchPolicy: queryOption || QueryOption.REMOTE_ONLY,
+        })
+    } catch (err) {
+      const apolloError = err as ApolloError
+      const error = apolloError.graphQLErrors?.[0]
+      if (error) {
+        throw ErrorTransformer.toClientError(error)
+      } else {
+        throw new UnknownGraphQLError(error)
+      }
+    }
+    const error = result.errors?.[0]
+    if (error) {
+      throw ErrorTransformer.toClientError(error)
+    }
+    if (result.data?.getIdentityDataProcessingConsentStatus) {
+      return result.data.getIdentityDataProcessingConsentStatus
+    } else {
+      throw new FatalError(
+        'unable to get identity data processing consent status',
+      )
+    }
+  }
+
+  public async provideIdentityDataProcessingConsent(
+    input: IdentityDataProcessingConsentInput,
+  ): Promise<IdentityDataProcessingConsentResponse> {
+    let result
+    try {
+      result =
+        await this._client.mutate<ProvideIdentityDataProcessingConsentMutation>(
+          {
+            mutation: ProvideIdentityDataProcessingConsentDocument,
+            variables: { input },
+            fetchPolicy: 'no-cache',
+          },
+        )
+    } catch (err) {
+      const apolloError = err as ApolloError
+      const error = apolloError.graphQLErrors?.[0]
+      if (error) {
+        throw ErrorTransformer.toClientError(error)
+      } else {
+        throw new UnknownGraphQLError(error)
+      }
+    }
+    const error = result.errors?.[0]
+    if (error) {
+      throw ErrorTransformer.toClientError(error)
+    }
+    if (result.data?.provideIdentityDataProcessingConsent) {
+      return result.data.provideIdentityDataProcessingConsent
+    } else {
+      throw new FatalError('unable to provide identity data processing consent')
+    }
+  }
+
+  public async withdrawIdentityDataProcessingConsent(): Promise<IdentityDataProcessingConsentResponse> {
+    let result
+    try {
+      result =
+        await this._client.mutate<WithdrawIdentityDataProcessingConsentMutation>(
+          {
+            mutation: WithdrawIdentityDataProcessingConsentDocument,
+            fetchPolicy: 'no-cache',
+          },
+        )
+    } catch (err) {
+      const apolloError = err as ApolloError
+      const error = apolloError.graphQLErrors?.[0]
+      if (error) {
+        throw ErrorTransformer.toClientError(error)
+      } else {
+        throw new UnknownGraphQLError(error)
+      }
+    }
+    const error = result.errors?.[0]
+    if (error) {
+      throw ErrorTransformer.toClientError(error)
+    }
+    if (result.data?.withdrawIdentityDataProcessingConsent) {
+      return result.data.withdrawIdentityDataProcessingConsent
+    } else {
+      throw new FatalError(
+        'unable to withdraw identity data processing consent',
+      )
     }
   }
 

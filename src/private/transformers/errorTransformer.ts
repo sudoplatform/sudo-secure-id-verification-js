@@ -10,6 +10,7 @@ import {
   VersionMismatchError,
 } from '@sudoplatform/sudo-common'
 import {
+  ConsentRequiredError,
   IdentityAlreadyVerifiedError,
   IdentityCaptureRetriesExceededError,
   IdentityCaptureRetryBlockedError,
@@ -18,6 +19,7 @@ import {
   IdentityVerificationUpdateFailedError,
   ImplausibleAgeError,
   InvalidAgeError,
+  RequiredIdentityInformationNotProvidedError,
   UnsupportedCountryError,
   UnsupportedNetworkLocationError,
   UnsupportedVerificationMethodError,
@@ -42,6 +44,8 @@ export class ErrorTransformer {
         return new UnsupportedCountryError(error.message)
       case 'sudoplatform.identity-verification.UnsupportedNetworkLocationError':
         return new UnsupportedNetworkLocationError(error.message)
+      case 'sudoplatform.identity-verification.RequiredIdentityInformationNotProvidedError':
+        return new RequiredIdentityInformationNotProvidedError(error.message)
       case 'sudoplatform.identity-verification.IdentityAlreadyVerifiedError':
         return new IdentityAlreadyVerifiedError(error.message)
       case 'sudoplatform.identity-verification.IdentityCaptureRetriesExceededError':
@@ -50,6 +54,8 @@ export class ErrorTransformer {
         return new IdentityCaptureRetryBlockedError(error.message)
       case 'sudoplatform.identity-verification.IdentityDataRedactedError':
         return new IdentityDataRedactedError(error.message)
+      case 'sudoplatform.identity-verification.ConsentRequiredError':
+        return new ConsentRequiredError(error.message)
       default:
         return mapGraphQLToClientError(error)
     }

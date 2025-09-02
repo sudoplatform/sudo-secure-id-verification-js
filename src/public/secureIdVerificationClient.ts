@@ -27,9 +27,17 @@ import {
   VerifyIdentityDocumentInput,
   VerifyIdentityInput,
   IdDocumentCaptureInitiationInfo,
+  IdentityDataProcessingConsentContent,
+  IdentityDataProcessingConsentContentInput,
+  IdentityDataProcessingConsentInput,
+  IdentityDataProcessingConsentResponse,
+  IdentityDataProcessingConsentStatus,
 } from './types'
 import { QueryOption } from './types/queryOption'
 import { SudoSecureIdVerificationClientOptions } from './types/sudoIdentityVerificationClientOptions'
+import { IdentityDataProcessingConsentContentTransformer } from '../private/transformers/identityDataProcessingConsentContentTransformer'
+import { IdentityDataProcessingConsentStatusTransformer } from '../private/transformers/identityDataProcessingConsentStatusTransformer'
+import { IdentityDataProcessingConsentInputTransformer } from '../private/transformers/identityDataProcessingConsentInputTransformer'
 
 /**
  * Client interface for accessing Secure ID Verification service.
@@ -99,6 +107,19 @@ export interface SudoSecureIdVerificationClient {
   isDocumentCaptureInitiationEnabled(
     queryOption?: QueryOption,
   ): Promise<boolean>
+
+  /**
+   * Retrieves whether consent is required before identity verification can succeed in the configured
+   * service environment.
+   *
+   * @returns Boolean
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  isConsentRequiredForVerification(queryOption?: QueryOption): Promise<boolean>
 
   /**
    * Queries the current identity verification status for the signed in user.
@@ -191,6 +212,69 @@ export interface SudoSecureIdVerificationClient {
    * @throws FatalError
    */
   initiateIdentityDocumentCapture(): Promise<IdDocumentCaptureInitiationInfo>
+
+  /**
+   * Retrieves the content for identity data processing consent, for a given preferred locale and content type.
+   *
+   * @param {IdentityDataProcessingConsentContentInput} input
+   *     Preferred content type and locale for consent content.
+   * @param {QueryOption} queryOption
+   *     Control for using local cache or making a network call.
+   * @returns Consent content for the given preferences.
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  getIdentityDataProcessingConsentContent(
+    input: IdentityDataProcessingConsentContentInput,
+    queryOption?: QueryOption,
+  ): Promise<IdentityDataProcessingConsentContent>
+
+  /**
+   * Withdraws the user's identity data processing consent.
+   *
+   * @returns Response indicating if the withdrawal was processed.
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  withdrawIdentityDataProcessingConsent(): Promise<IdentityDataProcessingConsentResponse>
+
+  /**
+   * Retrieves the user's current identity data processing consent status.
+   *
+   * @param {QueryOption} queryOption
+   *     Control for using local cache or making a network call.
+   * @returns Consent status for the user.
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  getIdentityDataProcessingConsentStatus(
+    queryOption?: QueryOption,
+  ): Promise<IdentityDataProcessingConsentStatus>
+
+  /**
+   * Provides the user's identity data processing consent.
+   *
+   * @param {IdentityDataProcessingConsentInput} input
+   *     Consent content, content type, and locale.
+   * @returns Response indicating if the consent was processed.
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  provideIdentityDataProcessingConsent(
+    input: IdentityDataProcessingConsentInput,
+  ): Promise<IdentityDataProcessingConsentResponse>
 }
 
 /**
@@ -223,10 +307,11 @@ export class DefaultSudoSecureIdVerificationClient
     const privateOptions =
       options as SudoSecureIdVerificationClientPrivateOptions
 
-    this.apiClient = privateOptions.apiClient ?? new ApiClient()
     this.identityVerificationServiceConfig =
       privateOptions.identityVerificationServiceConfig ??
       getIdentityVerificationServiceConfig()
+
+    this.apiClient = privateOptions.apiClient ?? new ApiClient()
   }
 
   /**
@@ -333,6 +418,29 @@ export class DefaultSudoSecureIdVerificationClient
   }
 
   /**
+   * Retrieves whether consent is required before identity verification can succeed in the configured
+   * service environment.
+   *
+   * @returns Boolean
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  async isConsentRequiredForVerification(
+    queryOption?: QueryOption,
+  ): Promise<boolean> {
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
+    this.logger.info(
+      'Determining requirement to provide consent before identity verification may proceed',
+    )
+    const capabilities = await this.apiClient.getCapabilities(queryOption)
+    return capabilities.consentRequired
+  }
+  /**
    * Queries the current identity verification status for the signed in user.
    *
    * @returns Verified identity results.
@@ -402,6 +510,7 @@ export class DefaultSudoSecureIdVerificationClient
    *     be absent or set to {@link VerificationMethod.GovernmentID}
    *
    * @throws NotSignedInError
+   * @throws ConsentRequiredError
    * @throws IllegalArgumentError
    * @throws UnknownGraphQLError
    * @throws ServiceError
@@ -501,5 +610,106 @@ export class DefaultSudoSecureIdVerificationClient
     return IdentityDocumentCaptureInfoTransformer.toEntity(
       idDocumentCaptureInitiationInfo,
     )
+  }
+
+  /**
+   * Retrieves the content for identity data processing consent, for a given locale and content type.
+   *
+   * @param {IdentityDataProcessingConsentContentInput} input
+   *     Preferred content type and locale for consent content.
+   * @param {QueryOption} queryOption
+   *     Control for using local cache or making a network call.
+   * @returns Consent content for the given preferences.
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  async getIdentityDataProcessingConsentContent(
+    input: IdentityDataProcessingConsentContentInput,
+    queryOption?: QueryOption,
+  ): Promise<IdentityDataProcessingConsentContent> {
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
+    this.logger.info('Retrieving identity data processing consent content')
+    // The input shape for the public API matches the GraphQL input so no explicit conversion is required
+    const content =
+      await this.apiClient.getIdentityDataProcessingConsentContent(
+        input,
+        queryOption,
+      )
+    return IdentityDataProcessingConsentContentTransformer.toEntity(content)
+  }
+
+  /**
+   * Withdraws the user's identity data processing consent.
+   *
+   * @returns Response indicating if the withdrawal was processed.
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  async withdrawIdentityDataProcessingConsent(): Promise<IdentityDataProcessingConsentResponse> {
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
+    this.logger.info('Withdrawing identity data processing consent')
+    const response =
+      await this.apiClient.withdrawIdentityDataProcessingConsent()
+    return { processed: response.processed }
+  }
+
+  /**
+   * Retrieves the user's current identity data processing consent status.
+   *
+   * @param {QueryOption} queryOption
+   *     Control for using local cache or making a network call.
+   * @returns Consent status for the user.
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  async getIdentityDataProcessingConsentStatus(
+    queryOption?: QueryOption,
+  ): Promise<IdentityDataProcessingConsentStatus> {
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
+    this.logger.info('Retrieving identity data processing consent status')
+    const status =
+      await this.apiClient.getIdentityDataProcessingConsentStatus(queryOption)
+    return IdentityDataProcessingConsentStatusTransformer.toEntity(status)
+  }
+
+  /**
+   * Provides the user's identity data processing consent.
+   *
+   * @param {IdentityDataProcessingConsentContentInput} input
+   *     Consent content, content type, and locale.
+   * @returns Response indicating if the consent was processed.
+   *
+   * @throws NotSignedInError
+   * @throws UnknownGraphQLError
+   * @throws ServiceError
+   * @throws FatalError
+   */
+  async provideIdentityDataProcessingConsent(
+    input: IdentityDataProcessingConsentInput,
+  ): Promise<IdentityDataProcessingConsentResponse> {
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
+    this.logger.info('Providing identity data processing consent')
+    const gqlInput =
+      IdentityDataProcessingConsentInputTransformer.toGraphQL(input)
+    const response =
+      await this.apiClient.provideIdentityDataProcessingConsent(gqlInput)
+    return { processed: response.processed }
   }
 }

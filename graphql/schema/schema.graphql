@@ -10,6 +10,7 @@ type VerifiedIdentity {
   documentVerificationStatus: String!
   verificationLastAttemptedAtEpochMs: Float!
   attemptsRemaining: Int!
+  consented: Boolean
 }
 
 input VerifyIdentityInput {
@@ -38,11 +39,42 @@ type IdentityVerificationCapabilities {
   faceImageRequiredWithDocumentCapture: Boolean!
   faceImageRequiredWithDocumentVerification: Boolean!
   canInitiateDocumentCapture: Boolean!
+  consentRequired: Boolean!
 }
 
 type IdentityDocumentCaptureInitiationResponse {
   documentCaptureUrl: String!
   expiryAtEpochSeconds: Float!
+}
+
+input IdentityDataProcessingConsentContentInput {
+  preferredContentType: String!
+  preferredLocale: String!
+}
+
+type IdentityDataProcessingConsentContent {
+  content: String!
+  contentType: String!
+  locale: String!
+}
+
+type IdentityDataProcessingConsentStatus  {
+  consented: Boolean!
+  consentedAtEpochMs: Float
+  consentWithdrawnAtEpochMs: Float
+  content: String
+  contentType: String
+  locale: String
+}
+
+input IdentityDataProcessingConsentInput {
+  content: String!
+  contentType: String!
+  locale: String!
+}
+
+type IdentityDataProcessingConsentResponse {
+  processed: Boolean!
 }
 
 type Mutation {
@@ -52,9 +84,17 @@ type Mutation {
     input: VerifyIdentityDocumentInput
   ): VerifiedIdentity
   initiateIdentityDocumentCapture: IdentityDocumentCaptureInitiationResponse
+  provideIdentityDataProcessingConsent(
+    input: IdentityDataProcessingConsentInput
+  ): IdentityDataProcessingConsentResponse
+  withdrawIdentityDataProcessingConsent: IdentityDataProcessingConsentResponse
 }
 
 type Query {
   checkIdentityVerification: VerifiedIdentity
   getIdentityVerificationCapabilities: IdentityVerificationCapabilities
+  getIdentityDataProcessingConsentContent(
+    input: IdentityDataProcessingConsentContentInput
+  ): IdentityDataProcessingConsentContent
+  getIdentityDataProcessingConsentStatus: IdentityDataProcessingConsentStatus
 }

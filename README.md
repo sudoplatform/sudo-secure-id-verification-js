@@ -9,9 +9,9 @@ Please see the [Sudo Platform Developer Docs](https://sudoplatform.com/docs) for
 ## Version Support
 
 | Technology | Supported version |
-| ---------- | ----------------- |
-| TypeScript | 4.0+              |
-| NodeJS     | 14.0+             |
+| ---------- |-------------------|
+| TypeScript | 5.0+              |
+| NodeJS     | 20.0+           |
 
 ## Integration Instructions
 

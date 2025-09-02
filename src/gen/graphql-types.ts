@@ -39,6 +39,39 @@ export type Scalars = {
   AWSURL: { input: any; output: any }
 }
 
+export type IdentityDataProcessingConsentContent = {
+  __typename?: 'IdentityDataProcessingConsentContent'
+  content: Scalars['String']['output']
+  contentType: Scalars['String']['output']
+  locale: Scalars['String']['output']
+}
+
+export type IdentityDataProcessingConsentContentInput = {
+  preferredContentType: Scalars['String']['input']
+  preferredLocale: Scalars['String']['input']
+}
+
+export type IdentityDataProcessingConsentInput = {
+  content: Scalars['String']['input']
+  contentType: Scalars['String']['input']
+  locale: Scalars['String']['input']
+}
+
+export type IdentityDataProcessingConsentResponse = {
+  __typename?: 'IdentityDataProcessingConsentResponse'
+  processed: Scalars['Boolean']['output']
+}
+
+export type IdentityDataProcessingConsentStatus = {
+  __typename?: 'IdentityDataProcessingConsentStatus'
+  consentWithdrawnAtEpochMs?: Maybe<Scalars['Float']['output']>
+  consented: Scalars['Boolean']['output']
+  consentedAtEpochMs?: Maybe<Scalars['Float']['output']>
+  content?: Maybe<Scalars['String']['output']>
+  contentType?: Maybe<Scalars['String']['output']>
+  locale?: Maybe<Scalars['String']['output']>
+}
+
 export type IdentityDocumentCaptureInitiationResponse = {
   __typename?: 'IdentityDocumentCaptureInitiationResponse'
   documentCaptureUrl: Scalars['String']['output']
@@ -48,6 +81,7 @@ export type IdentityDocumentCaptureInitiationResponse = {
 export type IdentityVerificationCapabilities = {
   __typename?: 'IdentityVerificationCapabilities'
   canInitiateDocumentCapture: Scalars['Boolean']['output']
+  consentRequired: Scalars['Boolean']['output']
   faceImageRequiredWithDocumentCapture: Scalars['Boolean']['output']
   faceImageRequiredWithDocumentVerification: Scalars['Boolean']['output']
   supportedCountries: Array<Scalars['String']['output']>
@@ -57,12 +91,18 @@ export type Mutation = {
   __typename?: 'Mutation'
   captureAndVerifyIdentityDocument?: Maybe<VerifiedIdentity>
   initiateIdentityDocumentCapture?: Maybe<IdentityDocumentCaptureInitiationResponse>
+  provideIdentityDataProcessingConsent?: Maybe<IdentityDataProcessingConsentResponse>
   verifyIdentity?: Maybe<VerifiedIdentity>
   verifyIdentityDocument?: Maybe<VerifiedIdentity>
+  withdrawIdentityDataProcessingConsent?: Maybe<IdentityDataProcessingConsentResponse>
 }
 
 export type MutationCaptureAndVerifyIdentityDocumentArgs = {
   input?: InputMaybe<VerifyIdentityDocumentInput>
+}
+
+export type MutationProvideIdentityDataProcessingConsentArgs = {
+  input?: InputMaybe<IdentityDataProcessingConsentInput>
 }
 
 export type MutationVerifyIdentityArgs = {
@@ -76,7 +116,13 @@ export type MutationVerifyIdentityDocumentArgs = {
 export type Query = {
   __typename?: 'Query'
   checkIdentityVerification?: Maybe<VerifiedIdentity>
+  getIdentityDataProcessingConsentContent?: Maybe<IdentityDataProcessingConsentContent>
+  getIdentityDataProcessingConsentStatus?: Maybe<IdentityDataProcessingConsentStatus>
   getIdentityVerificationCapabilities?: Maybe<IdentityVerificationCapabilities>
+}
+
+export type QueryGetIdentityDataProcessingConsentContentArgs = {
+  input?: InputMaybe<IdentityDataProcessingConsentContentInput>
 }
 
 export type VerifiedIdentity = {
@@ -84,6 +130,7 @@ export type VerifiedIdentity = {
   acceptableDocumentTypes: Array<Scalars['String']['output']>
   attemptsRemaining: Scalars['Int']['output']
   canAttemptVerificationAgain: Scalars['Boolean']['output']
+  consented?: Maybe<Scalars['Boolean']['output']>
   documentVerificationStatus: Scalars['String']['output']
   idScanUrl?: Maybe<Scalars['String']['output']>
   owner: Scalars['String']['output']
@@ -134,6 +181,7 @@ export type CaptureAndVerifyIdentityDocumentMutation = {
     documentVerificationStatus: string
     verificationLastAttemptedAtEpochMs: number
     attemptsRemaining: number
+    consented?: boolean | null
   } | null
 }
 
@@ -156,6 +204,38 @@ export type CheckIdentityVerificationQuery = {
     documentVerificationStatus: string
     verificationLastAttemptedAtEpochMs: number
     attemptsRemaining: number
+    consented?: boolean | null
+  } | null
+}
+
+export type GetIdentityDataProcessingConsentContentQueryVariables = Exact<{
+  input: IdentityDataProcessingConsentContentInput
+}>
+
+export type GetIdentityDataProcessingConsentContentQuery = {
+  __typename?: 'Query'
+  getIdentityDataProcessingConsentContent?: {
+    __typename?: 'IdentityDataProcessingConsentContent'
+    content: string
+    contentType: string
+    locale: string
+  } | null
+}
+
+export type GetIdentityDataProcessingConsentStatusQueryVariables = Exact<{
+  [key: string]: never
+}>
+
+export type GetIdentityDataProcessingConsentStatusQuery = {
+  __typename?: 'Query'
+  getIdentityDataProcessingConsentStatus?: {
+    __typename?: 'IdentityDataProcessingConsentStatus'
+    consented: boolean
+    consentedAtEpochMs?: number | null
+    consentWithdrawnAtEpochMs?: number | null
+    content?: string | null
+    contentType?: string | null
+    locale?: string | null
   } | null
 }
 
@@ -171,6 +251,7 @@ export type GetIdentityVerificationCapabilitiesQuery = {
     faceImageRequiredWithDocumentCapture: boolean
     faceImageRequiredWithDocumentVerification: boolean
     canInitiateDocumentCapture: boolean
+    consentRequired: boolean
   } | null
 }
 
@@ -184,6 +265,18 @@ export type InitiateIdentityDocumentCaptureMutation = {
     __typename?: 'IdentityDocumentCaptureInitiationResponse'
     documentCaptureUrl: string
     expiryAtEpochSeconds: number
+  } | null
+}
+
+export type ProvideIdentityDataProcessingConsentMutationVariables = Exact<{
+  input: IdentityDataProcessingConsentInput
+}>
+
+export type ProvideIdentityDataProcessingConsentMutation = {
+  __typename?: 'Mutation'
+  provideIdentityDataProcessingConsent?: {
+    __typename?: 'IdentityDataProcessingConsentResponse'
+    processed: boolean
   } | null
 }
 
@@ -206,6 +299,7 @@ export type VerifyIdentityMutation = {
     documentVerificationStatus: string
     verificationLastAttemptedAtEpochMs: number
     attemptsRemaining: number
+    consented?: boolean | null
   } | null
 }
 
@@ -228,6 +322,19 @@ export type VerifyIdentityDocumentMutation = {
     documentVerificationStatus: string
     verificationLastAttemptedAtEpochMs: number
     attemptsRemaining: number
+    consented?: boolean | null
+  } | null
+}
+
+export type WithdrawIdentityDataProcessingConsentMutationVariables = Exact<{
+  [key: string]: never
+}>
+
+export type WithdrawIdentityDataProcessingConsentMutation = {
+  __typename?: 'Mutation'
+  withdrawIdentityDataProcessingConsent?: {
+    __typename?: 'IdentityDataProcessingConsentResponse'
+    processed: boolean
   } | null
 }
 
@@ -311,6 +418,7 @@ export const CaptureAndVerifyIdentityDocumentDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'attemptsRemaining' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'consented' } },
               ],
             },
           },
@@ -376,6 +484,7 @@ export const CheckIdentityVerificationDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'attemptsRemaining' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'consented' } },
               ],
             },
           },
@@ -386,6 +495,110 @@ export const CheckIdentityVerificationDocument = {
 } as unknown as DocumentNode<
   CheckIdentityVerificationQuery,
   CheckIdentityVerificationQueryVariables
+>
+export const GetIdentityDataProcessingConsentContentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetIdentityDataProcessingConsentContent' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'IdentityDataProcessingConsentContentInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: {
+              kind: 'Name',
+              value: 'getIdentityDataProcessingConsentContent',
+            },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'locale' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetIdentityDataProcessingConsentContentQuery,
+  GetIdentityDataProcessingConsentContentQueryVariables
+>
+export const GetIdentityDataProcessingConsentStatusDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetIdentityDataProcessingConsentStatus' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: {
+              kind: 'Name',
+              value: 'getIdentityDataProcessingConsentStatus',
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'consented' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'consentedAtEpochMs' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'consentWithdrawnAtEpochMs' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'locale' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetIdentityDataProcessingConsentStatusQuery,
+  GetIdentityDataProcessingConsentStatusQueryVariables
 >
 export const GetIdentityVerificationCapabilitiesDocument = {
   kind: 'Document',
@@ -427,6 +640,10 @@ export const GetIdentityVerificationCapabilitiesDocument = {
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'canInitiateDocumentCapture' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'consentRequired' },
                 },
               ],
             },
@@ -473,6 +690,66 @@ export const InitiateIdentityDocumentCaptureDocument = {
 } as unknown as DocumentNode<
   InitiateIdentityDocumentCaptureMutation,
   InitiateIdentityDocumentCaptureMutationVariables
+>
+export const ProvideIdentityDataProcessingConsentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ProvideIdentityDataProcessingConsent' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'IdentityDataProcessingConsentInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: {
+              kind: 'Name',
+              value: 'provideIdentityDataProcessingConsent',
+            },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'processed' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ProvideIdentityDataProcessingConsentMutation,
+  ProvideIdentityDataProcessingConsentMutationVariables
 >
 export const VerifyIdentityDocument = {
   kind: 'Document',
@@ -554,6 +831,7 @@ export const VerifyIdentityDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'attemptsRemaining' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'consented' } },
               ],
             },
           },
@@ -645,6 +923,7 @@ export const VerifyIdentityDocumentDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'attemptsRemaining' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'consented' } },
               ],
             },
           },
@@ -655,4 +934,35 @@ export const VerifyIdentityDocumentDocument = {
 } as unknown as DocumentNode<
   VerifyIdentityDocumentMutation,
   VerifyIdentityDocumentMutationVariables
+>
+export const WithdrawIdentityDataProcessingConsentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'WithdrawIdentityDataProcessingConsent' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: {
+              kind: 'Name',
+              value: 'withdrawIdentityDataProcessingConsent',
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'processed' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  WithdrawIdentityDataProcessingConsentMutation,
+  WithdrawIdentityDataProcessingConsentMutationVariables
 >

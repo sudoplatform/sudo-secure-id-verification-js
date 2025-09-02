@@ -42,6 +42,7 @@ export class VerifiedIdentityTransformer {
         graphql.verificationLastAttemptedAtEpochMs,
       ),
       attemptsRemaining: graphql.attemptsRemaining,
+      consented: graphql.consented ?? undefined,
     }
   }
 }
