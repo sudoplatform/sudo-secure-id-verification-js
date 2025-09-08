@@ -14,7 +14,7 @@ export class IdentityDataProcessingConsentContentTransformer {
     return {
       content: graphql.content,
       contentType: graphql.contentType,
-      locale: graphql.locale,
+      language: graphql.language,
     }
   }
 }

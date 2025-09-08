@@ -14,7 +14,7 @@ export class IdentityDataProcessingConsentInputTransformer {
     return {
       content: input.content,
       contentType: input.contentType,
-      locale: input.locale,
+      language: input.language,
     }
   }
 }

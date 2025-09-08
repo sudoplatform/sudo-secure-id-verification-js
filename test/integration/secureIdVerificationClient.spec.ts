@@ -141,7 +141,7 @@ describe('SudoSecureIdVerificationClient', () => {
       const consentContent =
         await client.getIdentityDataProcessingConsentContent({
           preferredContentType: 'text/html',
-          preferredLocale: 'en-US',
+          preferredLanguage: 'en-US',
         })
       await client.provideIdentityDataProcessingConsent(consentContent)
       const grantedConsentStatus =
@@ -632,6 +632,8 @@ describe('SudoSecureIdVerificationClient', () => {
       it('unsuccessful idv using driver license without prior PII attempt', async () => {
         let verifiedIdentity = await client.checkIdentityVerification()
         await validateUnverifiedResponse(verifiedIdentity)
+        const isFaceImageRequired: boolean =
+          await client.isFaceImageRequiredWithDocumentVerification()
 
         const idDocument = await IdDocument.buildDocumentVerificationRequest(
           SimulatorDocuments.VALID_DRIVERS_LICENSE,
@@ -643,7 +645,11 @@ describe('SudoSecureIdVerificationClient', () => {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err: unknown) {
           const error = err as Error
-          expect(error.name).toBe('IdentityVerificationRecordNotFoundError')
+          expect(error.name).toBe(
+            isFaceImageRequired
+              ? 'RequiredIdentityInformationNotProvidedError'
+              : 'IdentityVerificationRecordNotFoundError',
+          )
           // expected
         }
       }, 60000)
@@ -707,18 +713,18 @@ describe('SudoSecureIdVerificationClient', () => {
         expect(contentTypeSplitter).toHaveLength(2)
         expect(contentTypeSplitter[0].length).toBeGreaterThan(0)
         expect(contentTypeSplitter[1].length).toBeGreaterThan(0)
-        expect(content.locale).toBeDefined()
-        expect(content.locale).toHaveLength(5)
-        const localeSplitter = content.locale.split('-')
-        expect(localeSplitter).toHaveLength(2)
-        expect(localeSplitter[0]).toHaveLength(2)
-        expect(localeSplitter[1]).toHaveLength(2)
+        expect(content.language).toBeDefined()
+        expect(content.language).toHaveLength(5)
+        const languageSplitter = content.language.split('-')
+        expect(languageSplitter).toHaveLength(2)
+        expect(languageSplitter[0]).toHaveLength(2)
+        expect(languageSplitter[1]).toHaveLength(2)
       }
 
       it('get identity data processing consent content', async () => {
         const input = {
           preferredContentType: 'text/plain',
-          preferredLocale: 'en-US',
+          preferredLanguage: 'en-US',
         }
         const content =
           await client.getIdentityDataProcessingConsentContent(input)
@@ -728,7 +734,7 @@ describe('SudoSecureIdVerificationClient', () => {
       it('get identity data processing consent content - cache empty', async () => {
         const input = {
           preferredContentType: 'text/plain',
-          preferredLocale: 'en-US',
+          preferredLanguage: 'en-US',
         }
         try {
           await client.getIdentityDataProcessingConsentContent(
@@ -744,7 +750,7 @@ describe('SudoSecureIdVerificationClient', () => {
       it('get identity data processing consent content - cache test', async () => {
         const input = {
           preferredContentType: 'text/plain',
-          preferredLocale: 'en-US',
+          preferredLanguage: 'en-US',
         }
         const remoteContent =
           await client.getIdentityDataProcessingConsentContent(

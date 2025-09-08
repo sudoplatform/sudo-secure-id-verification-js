@@ -17,7 +17,7 @@ export class IdentityDataProcessingConsentStatusTransformer {
       consentWithdrawnAtEpochMs: graphql.consentWithdrawnAtEpochMs ?? undefined,
       content: graphql.content ?? undefined,
       contentType: graphql.contentType ?? undefined,
-      locale: graphql.locale ?? undefined,
+      language: graphql.language ?? undefined,
     }
   }
 }

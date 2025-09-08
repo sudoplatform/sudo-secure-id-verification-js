@@ -4,5 +4,5 @@ export interface IdentityDataProcessingConsentStatus {
   consentWithdrawnAtEpochMs?: number
   content?: string
   contentType?: string
-  locale?: string
+  language?: string
 }

@@ -522,7 +522,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(
         client.getIdentityDataProcessingConsentContent({
           preferredContentType: 'text/html',
-          preferredLocale: 'en-US',
+          preferredLanguage: 'en-US',
         }),
       ).rejects.toEqual(new NotSignedInError())
     })
@@ -536,16 +536,16 @@ describe('SudoSecureIdVerificationClient', () => {
       ).thenResolve({
         content: '<p>Consent</p>',
         contentType: 'text/html',
-        locale: 'en-US',
+        language: 'en-US',
       })
       const result = await client.getIdentityDataProcessingConsentContent({
         preferredContentType: 'text/html',
-        preferredLocale: 'en-US',
+        preferredLanguage: 'en-US',
       })
       expect(result).toEqual({
         content: '<p>Consent</p>',
         contentType: 'text/html',
-        locale: 'en-US',
+        language: 'en-US',
       })
       verify(
         apiClientMock.getIdentityDataProcessingConsentContent(
@@ -573,7 +573,7 @@ describe('SudoSecureIdVerificationClient', () => {
         consentWithdrawnAtEpochMs: undefined,
         content: '<p>Consent</p>',
         contentType: 'text/html',
-        locale: 'en-US',
+        language: 'en-US',
       })
       const result = await client.getIdentityDataProcessingConsentStatus()
       expect(result).toEqual({
@@ -582,7 +582,7 @@ describe('SudoSecureIdVerificationClient', () => {
         consentWithdrawnAtEpochMs: undefined,
         content: '<p>Consent</p>',
         contentType: 'text/html',
-        locale: 'en-US',
+        language: 'en-US',
       })
       verify(
         apiClientMock.getIdentityDataProcessingConsentStatus(anything()),
@@ -597,7 +597,7 @@ describe('SudoSecureIdVerificationClient', () => {
         client.provideIdentityDataProcessingConsent({
           content: '<p>Consent</p>',
           contentType: 'text/html',
-          locale: 'en-US',
+          language: 'en-US',
         }),
       ).rejects.toEqual(new NotSignedInError())
     })
@@ -611,7 +611,7 @@ describe('SudoSecureIdVerificationClient', () => {
       const result = await client.provideIdentityDataProcessingConsent({
         content: '<p>Consent</p>',
         contentType: 'text/html',
-        locale: 'en-US',
+        language: 'en-US',
       })
       expect(result).toEqual({ processed: true })
       verify(
@@ -624,7 +624,7 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(arg1).toMatchObject({
         content: '<p>Consent</p>',
         contentType: 'text/html',
-        locale: 'en-US',
+        language: 'en-US',
       })
     })
   })

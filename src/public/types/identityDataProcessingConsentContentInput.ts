@@ -1,4 +1,4 @@
 export interface IdentityDataProcessingConsentContentInput {
   preferredContentType: string
-  preferredLocale: string
+  preferredLanguage: string
 }

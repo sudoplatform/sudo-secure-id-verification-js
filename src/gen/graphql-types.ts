@@ -43,18 +43,18 @@ export type IdentityDataProcessingConsentContent = {
   __typename?: 'IdentityDataProcessingConsentContent'
   content: Scalars['String']['output']
   contentType: Scalars['String']['output']
-  locale: Scalars['String']['output']
+  language: Scalars['String']['output']
 }
 
 export type IdentityDataProcessingConsentContentInput = {
   preferredContentType: Scalars['String']['input']
-  preferredLocale: Scalars['String']['input']
+  preferredLanguage: Scalars['String']['input']
 }
 
 export type IdentityDataProcessingConsentInput = {
   content: Scalars['String']['input']
   contentType: Scalars['String']['input']
-  locale: Scalars['String']['input']
+  language: Scalars['String']['input']
 }
 
 export type IdentityDataProcessingConsentResponse = {
@@ -69,7 +69,7 @@ export type IdentityDataProcessingConsentStatus = {
   consentedAtEpochMs?: Maybe<Scalars['Float']['output']>
   content?: Maybe<Scalars['String']['output']>
   contentType?: Maybe<Scalars['String']['output']>
-  locale?: Maybe<Scalars['String']['output']>
+  language?: Maybe<Scalars['String']['output']>
 }
 
 export type IdentityDocumentCaptureInitiationResponse = {
@@ -218,7 +218,7 @@ export type GetIdentityDataProcessingConsentContentQuery = {
     __typename?: 'IdentityDataProcessingConsentContent'
     content: string
     contentType: string
-    locale: string
+    language: string
   } | null
 }
 
@@ -235,7 +235,7 @@ export type GetIdentityDataProcessingConsentStatusQuery = {
     consentWithdrawnAtEpochMs?: number | null
     content?: string | null
     contentType?: string | null
-    locale?: string | null
+    language?: string | null
   } | null
 }
 
@@ -546,7 +546,7 @@ export const GetIdentityDataProcessingConsentContentDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'locale' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'language' } },
               ],
             },
           },
@@ -588,7 +588,7 @@ export const GetIdentityDataProcessingConsentStatusDocument = {
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'locale' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'language' } },
               ],
             },
           },

@@ -214,10 +214,11 @@ export interface SudoSecureIdVerificationClient {
   initiateIdentityDocumentCapture(): Promise<IdDocumentCaptureInitiationInfo>
 
   /**
-   * Retrieves the content for identity data processing consent, for a given preferred locale and content type.
+   * Retrieves the content for identity data processing consent, for a given preferred language
+   * (in RFC 5646 format) and content type.
    *
    * @param {IdentityDataProcessingConsentContentInput} input
-   *     Preferred content type and locale for consent content.
+   *     Preferred content type and language for consent content.
    * @param {QueryOption} queryOption
    *     Control for using local cache or making a network call.
    * @returns Consent content for the given preferences.
@@ -264,7 +265,7 @@ export interface SudoSecureIdVerificationClient {
    * Provides the user's identity data processing consent.
    *
    * @param {IdentityDataProcessingConsentInput} input
-   *     Consent content, content type, and locale.
+   *     Consent content, content type, and language.
    * @returns Response indicating if the consent was processed.
    *
    * @throws NotSignedInError
@@ -613,10 +614,11 @@ export class DefaultSudoSecureIdVerificationClient
   }
 
   /**
-   * Retrieves the content for identity data processing consent, for a given locale and content type.
+   * Retrieves the content for identity data processing consent, for a given preferred language
+   * (in RFC 5646 format) and content type.
    *
    * @param {IdentityDataProcessingConsentContentInput} input
-   *     Preferred content type and locale for consent content.
+   *     Preferred content type and language for consent content.
    * @param {QueryOption} queryOption
    *     Control for using local cache or making a network call.
    * @returns Consent content for the given preferences.
@@ -691,7 +693,7 @@ export class DefaultSudoSecureIdVerificationClient
    * Provides the user's identity data processing consent.
    *
    * @param {IdentityDataProcessingConsentContentInput} input
-   *     Consent content, content type, and locale.
+   *     Consent content, content type, and language.
    * @returns Response indicating if the consent was processed.
    *
    * @throws NotSignedInError
