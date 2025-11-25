@@ -5,7 +5,6 @@
  */
 
 import {
-  AppSyncError,
   mapGraphQLToClientError,
   VersionMismatchError,
 } from '@sudoplatform/sudo-common'
@@ -24,10 +23,14 @@ import {
   UnsupportedNetworkLocationError,
   UnsupportedVerificationMethodError,
 } from '../..'
+import { GraphQLError } from 'graphql'
 
 export class ErrorTransformer {
-  static toClientError(error: AppSyncError): Error {
-    switch (error.errorType) {
+  static toClientError(
+    error: { errorType: string; message: string } | GraphQLError,
+  ): Error {
+    const errorType = 'errorType' in error ? error.errorType : error.message
+    switch (errorType) {
       case 'DynamoDB:ConditionalCheckFailedException':
         return new VersionMismatchError()
       case 'sudoplatform.identity-verification.IdentityVerificationRecordNotFoundError':

@@ -26,7 +26,6 @@ import {
   IdDocument,
   IdDocumentType,
   IdentityDataProcessingConsentContent,
-  QueryOption,
   VerificationMethod,
   VerifiedIdentity,
   VerifyIdentityDocumentInput,
@@ -43,6 +42,7 @@ global.crypto = localCrypto
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 global.crypto.subtle = localCrypto.subtle // eslint-disable-line @typescript-eslint/no-unsafe-member-access
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 global.fetch = require('node-fetch')
 
@@ -264,8 +264,8 @@ describe('SudoSecureIdVerificationClient', () => {
     /**
      * Tests
      */
-    describe.skip('Capabilities', () => {
-      it('list supported countries', async () => {
+    describe('Capabilities', () => {
+      it('smoke_ list supported countries', async () => {
         const supportedCountries: string[] =
           await client.listSupportedCountries()
 
@@ -278,39 +278,7 @@ describe('SudoSecureIdVerificationClient', () => {
         })
       }, 20000)
 
-      it('list supported countries - cache empty', async () => {
-        try {
-          await client.listSupportedCountries(QueryOption.CACHE_ONLY)
-        } catch (err: unknown) {
-          const error = err as Error
-          expect(error.name).toBe('FatalError')
-        }
-      }, 20000)
-
-      it('list supported countries - cache test', async () => {
-        let supportedCountries: string[] = await client.listSupportedCountries(
-          QueryOption.REMOTE_ONLY,
-        )
-
-        // Regardless of the environment, the supported countries list should
-        // be empty and contain ISO 3166-2 character country codes.
-        expect(supportedCountries).toBeDefined()
-        expect(supportedCountries.length).toBeGreaterThanOrEqual(1)
-        supportedCountries.forEach((element) => {
-          expect(element.length).toBe(2)
-        })
-
-        supportedCountries = await client.listSupportedCountries(
-          QueryOption.CACHE_ONLY,
-        )
-        expect(supportedCountries).toBeDefined()
-        expect(supportedCountries.length).toBeGreaterThanOrEqual(1)
-        supportedCountries.forEach((element) => {
-          expect(element.length).toBe(2)
-        })
-      }, 25000)
-
-      it('face image requirement capability', async () => {
+      it('smoke_ face image requirement capability', async () => {
         await expect(
           client.isFaceImageRequiredWithDocumentCapture(),
         ).resolves.toBeDefined()
@@ -318,30 +286,6 @@ describe('SudoSecureIdVerificationClient', () => {
           client.isFaceImageRequiredWithDocumentVerification(),
         ).resolves.toBeDefined()
       }, 20000)
-
-      it('face image requirement capability - cache empty', async () => {
-        try {
-          await client.isFaceImageRequiredWithDocumentVerification(
-            QueryOption.CACHE_ONLY,
-          )
-        } catch (err: unknown) {
-          const error = err as Error
-          expect(error.name).toBe('FatalError')
-        }
-      }, 20000)
-
-      it('face image requirement capability - cache test', async () => {
-        const remoteIsFaceImageRequired: boolean =
-          await client.isFaceImageRequiredWithDocumentVerification(
-            QueryOption.REMOTE_ONLY,
-          )
-
-        const cachedIsFaceImageRequired =
-          await client.isFaceImageRequiredWithDocumentVerification(
-            QueryOption.CACHE_ONLY,
-          )
-        expect(remoteIsFaceImageRequired).toEqual(cachedIsFaceImageRequired)
-      }, 25000)
 
       it('document capture initiation capability', async () => {
         await expect(
@@ -354,47 +298,16 @@ describe('SudoSecureIdVerificationClient', () => {
           await client.isConsentRequiredForVerification()
         expect(typeof consentRequired).toBe('boolean')
       }, 20000)
-
-      it('is consent required - cache empty', async () => {
-        try {
-          await client.isConsentRequiredForVerification(QueryOption.CACHE_ONLY)
-        } catch (err: unknown) {
-          const error = err as Error
-          expect(error.name).toBe('FatalError')
-        }
-      }, 20000)
-
-      it('is consent required - cache test', async () => {
-        const consentRequired: boolean =
-          await client.isConsentRequiredForVerification(QueryOption.REMOTE_ONLY)
-        expect(typeof consentRequired).toBe('boolean')
-
-        const cachedConsentRequired =
-          await client.isConsentRequiredForVerification(QueryOption.CACHE_ONLY)
-        expect(consentRequired).toEqual(cachedConsentRequired)
-      }, 25000)
     })
 
     describe('simple verifyIdentity', () => {
       beforeEach(async () => {
         await grantConsentIfRequired()
-      }, 7000)
-      it('check idv status for newly registered user', async () => {
+      }, 12000)
+      it('smoke_ check idv status for newly registered user', async () => {
         const verifiedIdentity = await client.checkIdentityVerification()
         await validateUnverifiedResponse(verifiedIdentity)
       }, 20000)
-
-      it('check idv status for newly registered user - cache test', async () => {
-        let verifiedIdentity = await client.checkIdentityVerification(
-          QueryOption.REMOTE_ONLY,
-        )
-        await validateUnverifiedResponse(verifiedIdentity)
-
-        verifiedIdentity = await client.checkIdentityVerification(
-          QueryOption.CACHE_ONLY,
-        )
-        await validateUnverifiedResponse(verifiedIdentity)
-      }, 25000)
 
       it('successful pii idv with test data, with city and state omitted', async () => {
         let verifiedIdentity = await client.checkIdentityVerification()
@@ -409,7 +322,7 @@ describe('SudoSecureIdVerificationClient', () => {
         await validatePiiVerifiedResponse(verifiedIdentity)
       }, 45000)
 
-      it('successful pii idv with test data, including city and state', async () => {
+      it('smoke_ successful pii idv with test data, including city and state', async () => {
         let verifiedIdentity = await client.checkIdentityVerification()
         await validateUnverifiedResponse(verifiedIdentity)
 
@@ -454,7 +367,7 @@ describe('SudoSecureIdVerificationClient', () => {
         await validatePiiVerifiedResponse(verifiedIdentity)
       }, 30000)
 
-      it('unsuccessful pii idv with test data', async () => {
+      it('smoke_ unsuccessful pii idv with test data', async () => {
         let verifiedIdentity = await client.checkIdentityVerification()
         await validateUnverifiedResponse(verifiedIdentity)
 
@@ -558,7 +471,7 @@ describe('SudoSecureIdVerificationClient', () => {
         await validateIdDocumentVerifiedResponse(verifiedIdentity)
       }, 60000)
 
-      it('successful idv using passport after PII', async () => {
+      it('smoke_ successful idv using passport after PII', async () => {
         let verifiedIdentity = await client.checkIdentityVerification()
         await validateUnverifiedResponse(verifiedIdentity)
 
@@ -654,7 +567,7 @@ describe('SudoSecureIdVerificationClient', () => {
         }
       }, 60000)
 
-      it('successful capture and verification using driver license', async () => {
+      it('smoke_ successful capture and verification using driver license', async () => {
         let verifiedIdentity = await client.checkIdentityVerification()
         await validateUnverifiedResponse(verifiedIdentity)
 
@@ -678,7 +591,7 @@ describe('SudoSecureIdVerificationClient', () => {
       }, 60000)
     })
     describe('Document Capture', () => {
-      it('initiate document capture', async () => {
+      it('smoke_ initiate document capture', async () => {
         const isDocumentCaptureInitiationEnabled =
           await client.isDocumentCaptureInitiationEnabled()
         if (!isDocumentCaptureInitiationEnabled) {
@@ -721,7 +634,7 @@ describe('SudoSecureIdVerificationClient', () => {
         expect(languageSplitter[1]).toHaveLength(2)
       }
 
-      it('get identity data processing consent content', async () => {
+      it('smoke_ get identity data processing consent content', async () => {
         const input = {
           preferredContentType: 'text/plain',
           preferredLanguage: 'en-US',
@@ -730,46 +643,10 @@ describe('SudoSecureIdVerificationClient', () => {
           await client.getIdentityDataProcessingConsentContent(input)
         validateConsentContent(content)
       }, 20000)
-
-      it('get identity data processing consent content - cache empty', async () => {
-        const input = {
-          preferredContentType: 'text/plain',
-          preferredLanguage: 'en-US',
-        }
-        try {
-          await client.getIdentityDataProcessingConsentContent(
-            input,
-            QueryOption.CACHE_ONLY,
-          )
-        } catch (err: unknown) {
-          const error = err as Error
-          expect(error.name).toBe('FatalError')
-        }
-      }, 20000)
-
-      it('get identity data processing consent content - cache test', async () => {
-        const input = {
-          preferredContentType: 'text/plain',
-          preferredLanguage: 'en-US',
-        }
-        const remoteContent =
-          await client.getIdentityDataProcessingConsentContent(
-            input,
-            QueryOption.REMOTE_ONLY,
-          )
-        validateConsentContent(remoteContent)
-
-        const cachedContent =
-          await client.getIdentityDataProcessingConsentContent(
-            input,
-            QueryOption.CACHE_ONLY,
-          )
-        expect(cachedContent).toEqual(remoteContent)
-      }, 25000)
     })
 
     describe('Consent is required', () => {
-      it('idv fails when consent is required and not granted, but succeeds when it is', async () => {
+      it('smoke_ idv fails when consent is required and not granted, but succeeds when it is', async () => {
         if (!consentRequired) {
           console.log(
             'Skipping test: consent is not required in this environment.',
@@ -802,7 +679,7 @@ describe('SudoSecureIdVerificationClient', () => {
         await validatePiiVerifiedResponse(verifiedIdentity)
       }, 45000)
 
-      it('revocation of consent prevents presentation of identity documents', async () => {
+      it('smoke_ revocation of consent prevents presentation of identity documents', async () => {
         if (!consentRequired) {
           console.log(
             'Skipping test: consent is not required in this environment.',

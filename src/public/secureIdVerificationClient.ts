@@ -5,9 +5,9 @@
  */
 
 import {
-  Logger,
   DefaultLogger,
   IllegalArgumentError,
+  Logger,
   NotSignedInError,
 } from '@sudoplatform/sudo-common'
 import { SudoUserClient } from '@sudoplatform/sudo-user'
@@ -22,18 +22,17 @@ import { VerifyIdentityDocumentInputTransformer } from '../private/transformers/
 import { VerifyIdentityInputTransformer } from '../private/transformers/verifyIdentityInputTransformer'
 import { IdentityDocumentCaptureInfoTransformer } from '../private/transformers/idDocumentCaptureInfoTransformer'
 import {
-  VerificationMethod,
-  VerifiedIdentity,
-  VerifyIdentityDocumentInput,
-  VerifyIdentityInput,
   IdDocumentCaptureInitiationInfo,
   IdentityDataProcessingConsentContent,
   IdentityDataProcessingConsentContentInput,
   IdentityDataProcessingConsentInput,
   IdentityDataProcessingConsentResponse,
   IdentityDataProcessingConsentStatus,
+  VerificationMethod,
+  VerifiedIdentity,
+  VerifyIdentityDocumentInput,
+  VerifyIdentityInput,
 } from './types'
-import { QueryOption } from './types/queryOption'
 import { SudoSecureIdVerificationClientOptions } from './types/sudoIdentityVerificationClientOptions'
 import { IdentityDataProcessingConsentContentTransformer } from '../private/transformers/identityDataProcessingConsentContentTransformer'
 import { IdentityDataProcessingConsentStatusTransformer } from '../private/transformers/identityDataProcessingConsentStatusTransformer'
@@ -54,14 +53,12 @@ export interface SudoSecureIdVerificationClient {
    *
    * @returns List of ISO 3166-1 alpha-2 country codes.
    *
-   * @param {QueryOption} queryOption Control for using local cache or make a network call
-   *
    * @throws NotSignedInError
    * @throws UnknownGraphQLError
    * @throws ServiceError
    * @throws FatalError
    */
-  listSupportedCountries(queryOption?: QueryOption): Promise<string[]>
+  listSupportedCountries(): Promise<string[]>
 
   /**
    * Retrieves whether face images must be provided as part of ID document
@@ -74,9 +71,7 @@ export interface SudoSecureIdVerificationClient {
    * @throws ServiceError
    * @throws FatalError
    */
-  isFaceImageRequiredWithDocumentVerification(
-    queryOption?: QueryOption,
-  ): Promise<boolean>
+  isFaceImageRequiredWithDocumentVerification(): Promise<boolean>
 
   /**
    * Retrieves whether face images must be provided as part of ID document
@@ -89,9 +84,7 @@ export interface SudoSecureIdVerificationClient {
    * @throws ServiceError
    * @throws FatalError
    */
-  isFaceImageRequiredWithDocumentCapture(
-    queryOption?: QueryOption,
-  ): Promise<boolean>
+  isFaceImageRequiredWithDocumentCapture(): Promise<boolean>
 
   /**
    * Retrieves whether initiateIdentityDocumentCapture() can be called in the configured
@@ -104,9 +97,7 @@ export interface SudoSecureIdVerificationClient {
    * @throws ServiceError
    * @throws FatalError
    */
-  isDocumentCaptureInitiationEnabled(
-    queryOption?: QueryOption,
-  ): Promise<boolean>
+  isDocumentCaptureInitiationEnabled(): Promise<boolean>
 
   /**
    * Retrieves whether consent is required before identity verification can succeed in the configured
@@ -119,23 +110,19 @@ export interface SudoSecureIdVerificationClient {
    * @throws ServiceError
    * @throws FatalError
    */
-  isConsentRequiredForVerification(queryOption?: QueryOption): Promise<boolean>
+  isConsentRequiredForVerification(): Promise<boolean>
 
   /**
    * Queries the current identity verification status for the signed in user.
    *
    * @returns Verified identity results.
    *
-   * @param {QueryOption} queryOption Control for using local cache or make a network call
-   *
    * @throws NotSignedInError
    * @throws ServiceError
    * @throws UnknownGraphQLError
    * @throws FatalError
    */
-  checkIdentityVerification(
-    queryOption?: QueryOption,
-  ): Promise<VerifiedIdentity>
+  checkIdentityVerification(): Promise<VerifiedIdentity>
 
   /**
    * Attempts to verify identity based on provided personally identifiable information (PII).
@@ -219,8 +206,6 @@ export interface SudoSecureIdVerificationClient {
    *
    * @param {IdentityDataProcessingConsentContentInput} input
    *     Preferred content type and language for consent content.
-   * @param {QueryOption} queryOption
-   *     Control for using local cache or making a network call.
    * @returns Consent content for the given preferences.
    *
    * @throws NotSignedInError
@@ -230,7 +215,6 @@ export interface SudoSecureIdVerificationClient {
    */
   getIdentityDataProcessingConsentContent(
     input: IdentityDataProcessingConsentContentInput,
-    queryOption?: QueryOption,
   ): Promise<IdentityDataProcessingConsentContent>
 
   /**
@@ -248,8 +232,6 @@ export interface SudoSecureIdVerificationClient {
   /**
    * Retrieves the user's current identity data processing consent status.
    *
-   * @param {QueryOption} queryOption
-   *     Control for using local cache or making a network call.
    * @returns Consent status for the user.
    *
    * @throws NotSignedInError
@@ -257,9 +239,7 @@ export interface SudoSecureIdVerificationClient {
    * @throws ServiceError
    * @throws FatalError
    */
-  getIdentityDataProcessingConsentStatus(
-    queryOption?: QueryOption,
-  ): Promise<IdentityDataProcessingConsentStatus>
+  getIdentityDataProcessingConsentStatus(): Promise<IdentityDataProcessingConsentStatus>
 
   /**
    * Provides the user's identity data processing consent.
@@ -333,13 +313,13 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws ServiceError
    * @throws FatalError
    */
-  async listSupportedCountries(queryOption?: QueryOption): Promise<string[]> {
+  async listSupportedCountries(): Promise<string[]> {
     if (!(await this.sudoUserClient.isSignedIn())) {
       throw new NotSignedInError()
     }
 
     this.logger.info('Listing supported countries for identity verification')
-    const capabilities = await this.apiClient.getCapabilities(queryOption)
+    const capabilities = await this.apiClient.getCapabilities()
     return capabilities.supportedCountries
   }
 
@@ -354,9 +334,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws ServiceError
    * @throws FatalError
    */
-  async isFaceImageRequiredWithDocumentVerification(
-    queryOption?: QueryOption,
-  ): Promise<boolean> {
+  async isFaceImageRequiredWithDocumentVerification(): Promise<boolean> {
     if (!(await this.sudoUserClient.isSignedIn())) {
       throw new NotSignedInError()
     }
@@ -364,7 +342,7 @@ export class DefaultSudoSecureIdVerificationClient
     this.logger.info(
       'Determining requirement to provide face image with ID document verification.',
     )
-    const capabilities = await this.apiClient.getCapabilities(queryOption)
+    const capabilities = await this.apiClient.getCapabilities()
     return capabilities.faceImageRequiredWithDocumentVerification
   }
 
@@ -379,9 +357,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws ServiceError
    * @throws FatalError
    */
-  async isFaceImageRequiredWithDocumentCapture(
-    queryOption?: QueryOption,
-  ): Promise<boolean> {
+  async isFaceImageRequiredWithDocumentCapture(): Promise<boolean> {
     if (!(await this.sudoUserClient.isSignedIn())) {
       throw new NotSignedInError()
     }
@@ -389,7 +365,7 @@ export class DefaultSudoSecureIdVerificationClient
     this.logger.info(
       'Determining requirement to provide face image with ID document capture.',
     )
-    const capabilities = await this.apiClient.getCapabilities(queryOption)
+    const capabilities = await this.apiClient.getCapabilities()
     return capabilities.faceImageRequiredWithDocumentCapture
   }
 
@@ -404,9 +380,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws ServiceError
    * @throws FatalError
    */
-  async isDocumentCaptureInitiationEnabled(
-    queryOption?: QueryOption,
-  ): Promise<boolean> {
+  async isDocumentCaptureInitiationEnabled(): Promise<boolean> {
     if (!(await this.sudoUserClient.isSignedIn())) {
       throw new NotSignedInError()
     }
@@ -414,7 +388,7 @@ export class DefaultSudoSecureIdVerificationClient
     this.logger.info(
       'Determining requirement to provide face image with ID document',
     )
-    const capabilities = await this.apiClient.getCapabilities(queryOption)
+    const capabilities = await this.apiClient.getCapabilities()
     return capabilities.canInitiateDocumentCapture
   }
 
@@ -429,16 +403,14 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws ServiceError
    * @throws FatalError
    */
-  async isConsentRequiredForVerification(
-    queryOption?: QueryOption,
-  ): Promise<boolean> {
+  async isConsentRequiredForVerification(): Promise<boolean> {
     if (!(await this.sudoUserClient.isSignedIn())) {
       throw new NotSignedInError()
     }
     this.logger.info(
       'Determining requirement to provide consent before identity verification may proceed',
     )
-    const capabilities = await this.apiClient.getCapabilities(queryOption)
+    const capabilities = await this.apiClient.getCapabilities()
     return capabilities.consentRequired
   }
   /**
@@ -451,16 +423,13 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws ServiceError
    * @throws FatalError
    */
-  async checkIdentityVerification(
-    queryOption?: QueryOption,
-  ): Promise<VerifiedIdentity> {
+  async checkIdentityVerification(): Promise<VerifiedIdentity> {
     if (!(await this.sudoUserClient.isSignedIn())) {
       throw new NotSignedInError()
     }
 
     this.logger.info('Retrieving current identity verification status')
-    const verifiedIdentity =
-      await this.apiClient.checkIdentityVerification(queryOption)
+    const verifiedIdentity = await this.apiClient.checkIdentityVerification()
     return VerifiedIdentityTransformer.toEntity(verifiedIdentity)
   }
 
@@ -619,8 +588,6 @@ export class DefaultSudoSecureIdVerificationClient
    *
    * @param {IdentityDataProcessingConsentContentInput} input
    *     Preferred content type and language for consent content.
-   * @param {QueryOption} queryOption
-   *     Control for using local cache or making a network call.
    * @returns Consent content for the given preferences.
    *
    * @throws NotSignedInError
@@ -630,7 +597,6 @@ export class DefaultSudoSecureIdVerificationClient
    */
   async getIdentityDataProcessingConsentContent(
     input: IdentityDataProcessingConsentContentInput,
-    queryOption?: QueryOption,
   ): Promise<IdentityDataProcessingConsentContent> {
     if (!(await this.sudoUserClient.isSignedIn())) {
       throw new NotSignedInError()
@@ -638,10 +604,7 @@ export class DefaultSudoSecureIdVerificationClient
     this.logger.info('Retrieving identity data processing consent content')
     // The input shape for the public API matches the GraphQL input so no explicit conversion is required
     const content =
-      await this.apiClient.getIdentityDataProcessingConsentContent(
-        input,
-        queryOption,
-      )
+      await this.apiClient.getIdentityDataProcessingConsentContent(input)
     return IdentityDataProcessingConsentContentTransformer.toEntity(content)
   }
 
@@ -668,8 +631,6 @@ export class DefaultSudoSecureIdVerificationClient
   /**
    * Retrieves the user's current identity data processing consent status.
    *
-   * @param {QueryOption} queryOption
-   *     Control for using local cache or making a network call.
    * @returns Consent status for the user.
    *
    * @throws NotSignedInError
@@ -677,15 +638,12 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws ServiceError
    * @throws FatalError
    */
-  async getIdentityDataProcessingConsentStatus(
-    queryOption?: QueryOption,
-  ): Promise<IdentityDataProcessingConsentStatus> {
+  async getIdentityDataProcessingConsentStatus(): Promise<IdentityDataProcessingConsentStatus> {
     if (!(await this.sudoUserClient.isSignedIn())) {
       throw new NotSignedInError()
     }
     this.logger.info('Retrieving identity data processing consent status')
-    const status =
-      await this.apiClient.getIdentityDataProcessingConsentStatus(queryOption)
+    const status = await this.apiClient.getIdentityDataProcessingConsentStatus()
     return IdentityDataProcessingConsentStatusTransformer.toEntity(status)
   }
 

@@ -11,7 +11,7 @@ Please see the [Sudo Platform Developer Docs](https://sudoplatform.com/docs) for
 | Technology | Supported version |
 | ---------- |-------------------|
 | TypeScript | 5.0+              |
-| NodeJS     | 20.0+           |
+| NodeJS     | 22.0+             |
 
 ## Integration Instructions
 

@@ -22,6 +22,21 @@ export class DocumentVerificationStatusTransformer {
         return DocumentVerificationStatus.NotAttempted
       }
 
+      case 'captureInitiated': {
+        return DocumentVerificationStatus.CaptureInitiated
+      }
+      case 'captureLinkOpened': {
+        return DocumentVerificationStatus.CaptureLinkOpened
+      }
+      case 'captureRetryLimitExceeded': {
+        return DocumentVerificationStatus.CaptureRetryLimitExceeded
+      }
+      case 'captureLinkTimeout': {
+        return DocumentVerificationStatus.CaptureLinkTimeout
+      }
+      case 'captureLinkExpired': {
+        return DocumentVerificationStatus.CaptureLinkExpired
+      }
       case 'pending': {
         return DocumentVerificationStatus.Pending
       }

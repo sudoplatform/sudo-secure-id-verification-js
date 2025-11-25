@@ -8,80 +8,75 @@ import {
   ApiClientManager,
   DefaultApiClientManager,
 } from '@sudoplatform/sudo-api-client'
-import { FatalError, UnknownGraphQLError } from '@sudoplatform/sudo-common'
-import { NormalizedCacheObject } from 'apollo-cache-inmemory'
-import { ApolloError } from 'apollo-client'
-import { AWSAppSyncClient } from 'aws-appsync'
+import {
+  FatalError,
+  GraphQLNetworkError,
+  isGraphQLNetworkError,
+  mapNetworkErrorToClientError,
+  UnknownGraphQLError,
+} from '@sudoplatform/sudo-common'
 import {
   CaptureAndVerifyIdentityDocumentDocument,
   CaptureAndVerifyIdentityDocumentMutation,
   CheckIdentityVerificationDocument,
   CheckIdentityVerificationQuery,
+  GetIdentityDataProcessingConsentContentDocument,
+  GetIdentityDataProcessingConsentContentQuery,
+  GetIdentityDataProcessingConsentStatusDocument,
+  GetIdentityDataProcessingConsentStatusQuery,
   GetIdentityVerificationCapabilitiesDocument,
   GetIdentityVerificationCapabilitiesQuery,
+  IdentityDataProcessingConsentContent,
+  IdentityDataProcessingConsentContentInput,
+  IdentityDataProcessingConsentInput,
+  IdentityDataProcessingConsentResponse,
+  IdentityDataProcessingConsentStatus,
+  IdentityDocumentCaptureInitiationResponse,
   IdentityVerificationCapabilities,
+  InitiateIdentityDocumentCaptureDocument,
+  InitiateIdentityDocumentCaptureMutation,
+  ProvideIdentityDataProcessingConsentDocument,
+  ProvideIdentityDataProcessingConsentMutation,
   VerifiedIdentity,
+  VerifyIdentityDocument,
   VerifyIdentityDocumentDocument,
   VerifyIdentityDocumentInput,
   VerifyIdentityDocumentMutation,
-  VerifyIdentityDocument,
   VerifyIdentityInput,
   VerifyIdentityMutation,
-  InitiateIdentityDocumentCaptureDocument,
-  InitiateIdentityDocumentCaptureMutation,
-  IdentityDocumentCaptureInitiationResponse,
-  IdentityDataProcessingConsentContentInput,
-  IdentityDataProcessingConsentResponse,
-  IdentityDataProcessingConsentInput,
-  IdentityDataProcessingConsentStatus,
-  GetIdentityDataProcessingConsentContentQuery,
-  GetIdentityDataProcessingConsentContentDocument,
-  GetIdentityDataProcessingConsentStatusQuery,
-  GetIdentityDataProcessingConsentStatusDocument,
-  ProvideIdentityDataProcessingConsentMutation,
-  ProvideIdentityDataProcessingConsentDocument,
-  WithdrawIdentityDataProcessingConsentMutation,
   WithdrawIdentityDataProcessingConsentDocument,
-  IdentityDataProcessingConsentContent,
+  WithdrawIdentityDataProcessingConsentMutation,
 } from '../../gen/graphql-types'
-import { QueryOption } from '../../public/types'
 import { ErrorTransformer } from '../transformers/errorTransformer'
 import { configNamespace } from '../config'
+import { GraphQLClient } from '@sudoplatform/sudo-user'
+import { GraphQLError } from 'graphql'
 
 /**
  * AppSync wrapper to use to invoke Sudo Secure ID Verification Service APIs.
  */
 export class ApiClient {
-  private readonly _client: AWSAppSyncClient<NormalizedCacheObject>
+  private readonly _client: GraphQLClient
 
   public constructor(apiClientManager?: ApiClientManager) {
     const clientManager =
       apiClientManager ?? DefaultApiClientManager.getInstance()
 
     this._client = clientManager.getClient({
-      disableOffline: true,
       configNamespace: configNamespace,
     })
   }
 
-  public async getCapabilities(
-    queryOption?: QueryOption,
-  ): Promise<IdentityVerificationCapabilities> {
+  public async getCapabilities(): Promise<IdentityVerificationCapabilities> {
     let result
     try {
       result =
         await this._client.query<GetIdentityVerificationCapabilitiesQuery>({
           query: GetIdentityVerificationCapabilitiesDocument,
-          fetchPolicy: queryOption || QueryOption.REMOTE_ONLY,
         })
-    } catch (err) {
-      const apolloError = err as ApolloError
-      const error = apolloError.graphQLErrors?.[0]
-      if (error) {
-        throw ErrorTransformer.toClientError(error)
-      } else {
-        throw new UnknownGraphQLError(error)
-      }
+    } catch (err: unknown) {
+      const networkError = err as GraphQLNetworkError
+      throw this.convertAllErrors(networkError, err)
     }
 
     const error = result.errors?.[0]
@@ -98,23 +93,15 @@ export class ApiClient {
     }
   }
 
-  public async checkIdentityVerification(
-    queryOption?: QueryOption,
-  ): Promise<VerifiedIdentity> {
+  public async checkIdentityVerification(): Promise<VerifiedIdentity> {
     let result
     try {
       result = await this._client.query<CheckIdentityVerificationQuery>({
         query: CheckIdentityVerificationDocument,
-        fetchPolicy: queryOption || QueryOption.REMOTE_ONLY,
       })
-    } catch (err) {
-      const apolloError = err as ApolloError
-      const error = apolloError.graphQLErrors?.[0]
-      if (error) {
-        throw ErrorTransformer.toClientError(error)
-      } else {
-        throw new UnknownGraphQLError(error)
-      }
+    } catch (err: unknown) {
+      const networkError = err as GraphQLNetworkError
+      throw this.convertAllErrors(networkError, err)
     }
 
     const error = result.errors?.[0]
@@ -131,7 +118,6 @@ export class ApiClient {
 
   public async getIdentityDataProcessingConsentContent(
     input: IdentityDataProcessingConsentContentInput,
-    queryOption?: QueryOption,
   ): Promise<IdentityDataProcessingConsentContent> {
     let result
     try {
@@ -139,21 +125,17 @@ export class ApiClient {
         await this._client.query<GetIdentityDataProcessingConsentContentQuery>({
           query: GetIdentityDataProcessingConsentContentDocument,
           variables: { input },
-          fetchPolicy: queryOption || QueryOption.REMOTE_ONLY,
         })
-    } catch (err) {
-      const apolloError = err as ApolloError
-      const error = apolloError.graphQLErrors?.[0]
-      if (error) {
-        throw ErrorTransformer.toClientError(error)
-      } else {
-        throw new UnknownGraphQLError(error)
-      }
+    } catch (err: unknown) {
+      const networkError = err as GraphQLNetworkError
+      throw this.convertAllErrors(networkError, err)
     }
+
     const error = result.errors?.[0]
     if (error) {
       throw ErrorTransformer.toClientError(error)
     }
+
     if (result.data?.getIdentityDataProcessingConsentContent) {
       return result.data.getIdentityDataProcessingConsentContent
     } else {
@@ -163,29 +145,23 @@ export class ApiClient {
     }
   }
 
-  public async getIdentityDataProcessingConsentStatus(
-    queryOption?: QueryOption,
-  ): Promise<IdentityDataProcessingConsentStatus> {
+  public async getIdentityDataProcessingConsentStatus(): Promise<IdentityDataProcessingConsentStatus> {
     let result
     try {
       result =
         await this._client.query<GetIdentityDataProcessingConsentStatusQuery>({
           query: GetIdentityDataProcessingConsentStatusDocument,
-          fetchPolicy: queryOption || QueryOption.REMOTE_ONLY,
         })
-    } catch (err) {
-      const apolloError = err as ApolloError
-      const error = apolloError.graphQLErrors?.[0]
-      if (error) {
-        throw ErrorTransformer.toClientError(error)
-      } else {
-        throw new UnknownGraphQLError(error)
-      }
+    } catch (err: unknown) {
+      const networkError = err as GraphQLNetworkError
+      throw this.convertAllErrors(networkError, err)
     }
+
     const error = result.errors?.[0]
     if (error) {
       throw ErrorTransformer.toClientError(error)
     }
+
     if (result.data?.getIdentityDataProcessingConsentStatus) {
       return result.data.getIdentityDataProcessingConsentStatus
     } else {
@@ -205,22 +181,18 @@ export class ApiClient {
           {
             mutation: ProvideIdentityDataProcessingConsentDocument,
             variables: { input },
-            fetchPolicy: 'no-cache',
           },
         )
-    } catch (err) {
-      const apolloError = err as ApolloError
-      const error = apolloError.graphQLErrors?.[0]
-      if (error) {
-        throw ErrorTransformer.toClientError(error)
-      } else {
-        throw new UnknownGraphQLError(error)
-      }
+    } catch (err: unknown) {
+      const networkError = err as GraphQLNetworkError
+      throw this.convertAllErrors(networkError, err)
     }
+
     const error = result.errors?.[0]
     if (error) {
       throw ErrorTransformer.toClientError(error)
     }
+
     if (result.data?.provideIdentityDataProcessingConsent) {
       return result.data.provideIdentityDataProcessingConsent
     } else {
@@ -235,22 +207,18 @@ export class ApiClient {
         await this._client.mutate<WithdrawIdentityDataProcessingConsentMutation>(
           {
             mutation: WithdrawIdentityDataProcessingConsentDocument,
-            fetchPolicy: 'no-cache',
           },
         )
-    } catch (err) {
-      const apolloError = err as ApolloError
-      const error = apolloError.graphQLErrors?.[0]
-      if (error) {
-        throw ErrorTransformer.toClientError(error)
-      } else {
-        throw new UnknownGraphQLError(error)
-      }
+    } catch (err: unknown) {
+      const networkError = err as GraphQLNetworkError
+      throw this.convertAllErrors(networkError, err)
     }
+
     const error = result.errors?.[0]
     if (error) {
       throw ErrorTransformer.toClientError(error)
     }
+
     if (result.data?.withdrawIdentityDataProcessingConsent) {
       return result.data.withdrawIdentityDataProcessingConsent
     } else {
@@ -268,16 +236,10 @@ export class ApiClient {
       result = await this._client.mutate<VerifyIdentityMutation>({
         mutation: VerifyIdentityDocument,
         variables: { input: pii },
-        fetchPolicy: 'no-cache',
       })
-    } catch (err) {
-      const apolloError = err as ApolloError
-      const error = apolloError.graphQLErrors?.[0]
-      if (error) {
-        throw ErrorTransformer.toClientError(error)
-      } else {
-        throw new UnknownGraphQLError(error)
-      }
+    } catch (err: unknown) {
+      const networkError = err as GraphQLNetworkError
+      throw this.convertAllErrors(networkError, err)
     }
 
     const error = result.errors?.[0]
@@ -300,16 +262,10 @@ export class ApiClient {
       result = await this._client.mutate<VerifyIdentityDocumentMutation>({
         mutation: VerifyIdentityDocumentDocument,
         variables: { input: idDocumentInfo },
-        fetchPolicy: 'no-cache',
       })
-    } catch (err) {
-      const apolloError = err as ApolloError
-      const error = apolloError.graphQLErrors?.[0]
-      if (error) {
-        throw ErrorTransformer.toClientError(error)
-      } else {
-        throw new UnknownGraphQLError(error)
-      }
+    } catch (err: unknown) {
+      const networkError = err as GraphQLNetworkError
+      throw this.convertAllErrors(networkError, err)
     }
 
     const error = result.errors?.[0]
@@ -333,16 +289,10 @@ export class ApiClient {
         await this._client.mutate<CaptureAndVerifyIdentityDocumentMutation>({
           mutation: CaptureAndVerifyIdentityDocumentDocument,
           variables: { input: idDocumentInfo },
-          fetchPolicy: 'no-cache',
         })
-    } catch (err) {
-      const apolloError = err as ApolloError
-      const error = apolloError.graphQLErrors?.[0]
-      if (error) {
-        throw ErrorTransformer.toClientError(error)
-      } else {
-        throw new UnknownGraphQLError(error)
-      }
+    } catch (err: unknown) {
+      const networkError = err as GraphQLNetworkError
+      throw this.convertAllErrors(networkError, err)
     }
 
     const error = result.errors?.[0]
@@ -364,16 +314,10 @@ export class ApiClient {
         await this._client.mutate<InitiateIdentityDocumentCaptureMutation>({
           mutation: InitiateIdentityDocumentCaptureDocument,
           variables: {},
-          fetchPolicy: 'no-cache',
         })
-    } catch (err) {
-      const apolloError = err as ApolloError
-      const error = apolloError.graphQLErrors?.[0]
-      if (error) {
-        throw ErrorTransformer.toClientError(error)
-      } else {
-        throw new UnknownGraphQLError(error)
-      }
+    } catch (err: unknown) {
+      const networkError = err as GraphQLNetworkError
+      throw this.convertAllErrors(networkError, err)
     }
 
     const error = result.errors?.[0]
@@ -388,7 +332,46 @@ export class ApiClient {
     }
   }
 
-  public async reset(): Promise<void> {
-    await this._client.clearStore()
+  public reset(): Promise<void> {
+    return Promise.resolve()
+  }
+
+  private convertAllErrors(
+    networkError:
+      | GraphQLNetworkError
+      | (GraphQLError & {
+          errorType?: string | null
+          errorInfo?: unknown
+        })
+      | (GraphQLError & {
+          errorType?: string | null
+          errorInfo?: unknown
+        } & Error & {
+            networkError: Error & { statusCode?: number }
+          }),
+    err: unknown,
+  ): Error {
+    if (isGraphQLNetworkError(networkError)) {
+      return mapNetworkErrorToClientError(networkError)
+    }
+
+    return this.mapGraphQLCallError(err as Error)
+  }
+  mapGraphQLCallError = (err: Error): Error => {
+    if ('graphQLErrors' in err && Array.isArray(err.graphQLErrors)) {
+      const error = err.graphQLErrors[0] as {
+        errorType: string
+        message: string
+      }
+      if (error) {
+        return ErrorTransformer.toClientError(error)
+      }
+    }
+    if ('errorType' in err) {
+      return ErrorTransformer.toClientError(
+        err as { errorType: string; message: string },
+      )
+    }
+    return new UnknownGraphQLError(err.message)
   }
 }

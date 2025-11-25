@@ -7,7 +7,6 @@
 export * from './documentVerificationStatus'
 export * from './idDocumentInfo'
 export * from './idDocumentType'
-export * from './queryOption'
 export * from './sudoIdentityVerificationClientOptions'
 export * from './verificationMethod'
 export * from './verifiedIdentity'

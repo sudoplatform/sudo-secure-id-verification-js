@@ -5,24 +5,23 @@
  */
 
 import {
-  IdDocument,
-  QueryOption,
-  SudoSecureIdVerificationClient,
   DefaultSudoSecureIdVerificationClient,
-  VerificationMethod,
-  IdDocumentType,
-  VerifyIdentityDocumentInput,
   DocumentVerificationStatus,
+  IdDocument,
+  IdDocumentType,
+  SudoSecureIdVerificationClient,
+  VerificationMethod,
+  VerifyIdentityDocumentInput,
 } from '../../src'
 import { ApiClient } from '../../src/private/client/apiClient'
 import {
-  mock,
-  when,
-  instance,
-  reset,
   anything,
   capture,
+  instance,
+  mock,
+  reset,
   verify,
+  when,
 } from 'ts-mockito'
 import {
   DefaultConfigurationManager,
@@ -96,7 +95,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
     it('returns successfully', async () => {
       // with no query option
-      when(apiClientMock.getCapabilities(anything())).thenResolve({
+      when(apiClientMock.getCapabilities()).thenResolve({
         supportedCountries: ['US'],
         faceImageRequiredWithDocumentCapture: false,
         faceImageRequiredWithDocumentVerification: false,
@@ -110,18 +109,12 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(supportedCountries[0]).toEqual('US')
 
       // with a query option
-      supportedCountries = await client.listSupportedCountries(
-        QueryOption.CACHE_ONLY,
-      )
+      supportedCountries = await client.listSupportedCountries()
       expect(supportedCountries).toBeDefined()
       expect(supportedCountries.length).toEqual(1)
       expect(supportedCountries[0]).toEqual('US')
 
-      verify(apiClientMock.getCapabilities(anything())).twice()
-      const [arg1] = capture(apiClientMock.getCapabilities).first()
-      expect(arg1).toBeUndefined()
-      const [arg2] = capture(apiClientMock.getCapabilities).second()
-      expect(arg2).toEqual(QueryOption.CACHE_ONLY)
+      verify(apiClientMock.getCapabilities()).twice()
     })
   })
 
@@ -135,7 +128,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
     it('returns successfully', async () => {
       // with no query option
-      when(apiClientMock.getCapabilities(anything())).thenResolve({
+      when(apiClientMock.getCapabilities()).thenResolve({
         supportedCountries: ['US'],
         faceImageRequiredWithDocumentCapture: false,
         faceImageRequiredWithDocumentVerification: false,
@@ -149,9 +142,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
       // with a query option
       isFaceImageRequiredWithDocumentVerification =
-        await client.isFaceImageRequiredWithDocumentVerification(
-          QueryOption.CACHE_ONLY,
-        )
+        await client.isFaceImageRequiredWithDocumentVerification()
       expect(isFaceImageRequiredWithDocumentVerification).toBeFalsy()
     })
   })
@@ -166,7 +157,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
     it('returns successfully', async () => {
       // with no query option
-      when(apiClientMock.getCapabilities(anything())).thenResolve({
+      when(apiClientMock.getCapabilities()).thenResolve({
         supportedCountries: ['US'],
         faceImageRequiredWithDocumentCapture: false,
         faceImageRequiredWithDocumentVerification: false,
@@ -180,9 +171,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
       // with a query option
       isFaceImageRequiredWithDocumentCapture =
-        await client.isFaceImageRequiredWithDocumentCapture(
-          QueryOption.CACHE_ONLY,
-        )
+        await client.isFaceImageRequiredWithDocumentCapture()
       expect(isFaceImageRequiredWithDocumentCapture).toBeFalsy()
     })
   })
@@ -197,7 +186,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
     it('returns successfully', async () => {
       // with no query option
-      when(apiClientMock.getCapabilities(anything())).thenResolve({
+      when(apiClientMock.getCapabilities()).thenResolve({
         supportedCountries: ['US'],
         faceImageRequiredWithDocumentCapture: false,
         faceImageRequiredWithDocumentVerification: false,
@@ -211,7 +200,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
       // with a query option
       canInitiateDocumentCapture =
-        await client.isDocumentCaptureInitiationEnabled(QueryOption.CACHE_ONLY)
+        await client.isDocumentCaptureInitiationEnabled()
       expect(canInitiateDocumentCapture).toBeTruthy()
     })
   })
@@ -228,7 +217,7 @@ describe('SudoSecureIdVerificationClient', () => {
       const now = new Date()
       const epoch = new Date(0)
 
-      when(apiClientMock.checkIdentityVerification(anything())).thenResolve({
+      when(apiClientMock.checkIdentityVerification()).thenResolve({
         owner: 'o-uuid',
         verified: false,
         verificationMethod: 'NONE',
@@ -255,7 +244,7 @@ describe('SudoSecureIdVerificationClient', () => {
         attemptsRemaining: 2,
       })
 
-      verify(apiClientMock.checkIdentityVerification(anything())).once()
+      verify(apiClientMock.checkIdentityVerification()).once()
       const [actualQuery] = capture(
         apiClientMock.checkIdentityVerification,
       ).first()
@@ -266,7 +255,7 @@ describe('SudoSecureIdVerificationClient', () => {
       const now = new Date()
       const epoch = new Date(0)
 
-      when(apiClientMock.checkIdentityVerification(anything())).thenResolve({
+      when(apiClientMock.checkIdentityVerification()).thenResolve({
         owner: 'o-uuid',
         verified: false,
         verificationMethod: 'NONE',
@@ -279,9 +268,7 @@ describe('SudoSecureIdVerificationClient', () => {
         attemptsRemaining: 2,
       })
 
-      const status = await client.checkIdentityVerification(
-        QueryOption.CACHE_ONLY,
-      )
+      const status = await client.checkIdentityVerification()
       expect(status).toEqual({
         owner: 'o-uuid',
         verified: false,
@@ -295,11 +282,7 @@ describe('SudoSecureIdVerificationClient', () => {
         attemptsRemaining: 2,
       })
 
-      verify(apiClientMock.checkIdentityVerification(anything())).once()
-      const [actualQuery] = capture(
-        apiClientMock.checkIdentityVerification,
-      ).first()
-      expect(actualQuery).toEqual(QueryOption.CACHE_ONLY)
+      verify(apiClientMock.checkIdentityVerification()).once()
     })
   })
 
@@ -529,10 +512,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
     it('returns successfully', async () => {
       when(
-        apiClientMock.getIdentityDataProcessingConsentContent(
-          anything(),
-          anything(),
-        ),
+        apiClientMock.getIdentityDataProcessingConsentContent(anything()),
       ).thenResolve({
         content: '<p>Consent</p>',
         contentType: 'text/html',
@@ -548,10 +528,7 @@ describe('SudoSecureIdVerificationClient', () => {
         language: 'en-US',
       })
       verify(
-        apiClientMock.getIdentityDataProcessingConsentContent(
-          anything(),
-          anything(),
-        ),
+        apiClientMock.getIdentityDataProcessingConsentContent(anything()),
       ).once()
     })
   })
@@ -565,9 +542,7 @@ describe('SudoSecureIdVerificationClient', () => {
     })
 
     it('returns successfully', async () => {
-      when(
-        apiClientMock.getIdentityDataProcessingConsentStatus(anything()),
-      ).thenResolve({
+      when(apiClientMock.getIdentityDataProcessingConsentStatus()).thenResolve({
         consented: true,
         consentedAtEpochMs: 123456789,
         consentWithdrawnAtEpochMs: undefined,
@@ -584,9 +559,7 @@ describe('SudoSecureIdVerificationClient', () => {
         contentType: 'text/html',
         language: 'en-US',
       })
-      verify(
-        apiClientMock.getIdentityDataProcessingConsentStatus(anything()),
-      ).once()
+      verify(apiClientMock.getIdentityDataProcessingConsentStatus()).once()
     })
   })
 
