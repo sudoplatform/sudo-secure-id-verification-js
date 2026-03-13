@@ -7,9 +7,11 @@
 import { SudoSecureIdVerificationClientOptions } from '../public/types/sudoIdentityVerificationClientOptions'
 import { ApiClient } from './client/apiClient'
 import { IdentityVerificationServiceConfig } from './config'
+import { SignInGuard } from '@sudoplatform/sudo-user'
 
 export interface SudoSecureIdVerificationClientPrivateOptions
   extends SudoSecureIdVerificationClientOptions {
   apiClient?: ApiClient
   identityVerificationServiceConfig?: IdentityVerificationServiceConfig
+  signInGuard?: SignInGuard
 }

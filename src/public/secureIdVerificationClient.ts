@@ -10,7 +10,11 @@ import {
   Logger,
   NotSignedInError,
 } from '@sudoplatform/sudo-common'
-import { SudoUserClient } from '@sudoplatform/sudo-user'
+import {
+  SignInGuard,
+  SudoPlatformSignInCallback,
+  SudoUserClient,
+} from '@sudoplatform/sudo-user'
 import { ApiClient } from '../private/client/apiClient'
 import {
   getIdentityVerificationServiceConfig,
@@ -46,6 +50,21 @@ export interface SudoSecureIdVerificationClient {
    * Resets internal state and clear any cached data.
    */
   reset(): Promise<void>
+
+  /**
+   * Sets an optional callback to handle sign-in when operations are attempted
+   * while not signed in.
+   *
+   * When set, all operations (excepting subscriptions and initialization/reset) will
+   * check sign-in status before performing their normal behavior. If the client is
+   * not signed in, the callback will be invoked to allow the host app to perform
+   * sign-in. Once the callback completes, then the client will attempt the original
+   * operation that triggered the callback.
+   * If the callback throws an error, then the error will be propagated to the caller
+   * and the original operation will not be attempted.
+   * To clear the callback, call this method with no arguments or undefined.
+   */
+  setSignInCallback(callback?: SudoPlatformSignInCallback): void
 
   /**
    * Retrieves the list of countries for which secure ID verification is supported in the
@@ -267,6 +286,7 @@ export class DefaultSudoSecureIdVerificationClient
   private readonly sudoUserClient: SudoUserClient
   private readonly apiClient: ApiClient
   private readonly identityVerificationServiceConfig: IdentityVerificationServiceConfig
+  private readonly signInGuard: SignInGuard
   private readonly logger: Logger
 
   /**
@@ -293,6 +313,8 @@ export class DefaultSudoSecureIdVerificationClient
       getIdentityVerificationServiceConfig()
 
     this.apiClient = privateOptions.apiClient ?? new ApiClient()
+    this.signInGuard =
+      privateOptions.signInGuard ?? new SignInGuard(this.sudoUserClient)
   }
 
   /**
@@ -300,6 +322,14 @@ export class DefaultSudoSecureIdVerificationClient
    */
   reset(): Promise<void> {
     return this.apiClient.reset()
+  }
+
+  /**
+   * Sets an optional callback to handle sign-in when operations are attempted
+   * while not signed in.
+   */
+  public setSignInCallback(callback?: SudoPlatformSignInCallback): void {
+    this.signInGuard.setCallback(callback)
   }
 
   /**
@@ -314,9 +344,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws FatalError
    */
   async listSupportedCountries(): Promise<string[]> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
 
     this.logger.info('Listing supported countries for identity verification')
     const capabilities = await this.apiClient.getCapabilities()
@@ -335,9 +363,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws FatalError
    */
   async isFaceImageRequiredWithDocumentVerification(): Promise<boolean> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
 
     this.logger.info(
       'Determining requirement to provide face image with ID document verification.',
@@ -358,9 +384,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws FatalError
    */
   async isFaceImageRequiredWithDocumentCapture(): Promise<boolean> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
 
     this.logger.info(
       'Determining requirement to provide face image with ID document capture.',
@@ -381,9 +405,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws FatalError
    */
   async isDocumentCaptureInitiationEnabled(): Promise<boolean> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
 
     this.logger.info(
       'Determining requirement to provide face image with ID document',
@@ -404,9 +426,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws FatalError
    */
   async isConsentRequiredForVerification(): Promise<boolean> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
     this.logger.info(
       'Determining requirement to provide consent before identity verification may proceed',
     )
@@ -424,9 +444,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws FatalError
    */
   async checkIdentityVerification(): Promise<VerifiedIdentity> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
 
     this.logger.info('Retrieving current identity verification status')
     const verifiedIdentity = await this.apiClient.checkIdentityVerification()
@@ -449,9 +467,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws FatalError
    */
   async verifyIdentity(pii: VerifyIdentityInput): Promise<VerifiedIdentity> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
 
     this.logger.info('Verifying identity using PII')
     if (!pii.verificationMethod) {
@@ -489,9 +505,7 @@ export class DefaultSudoSecureIdVerificationClient
   async verifyIdentityDocument(
     idDocumentInfo: VerifyIdentityDocumentInput,
   ): Promise<VerifiedIdentity> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
 
     this.logger.info('Verifying identity using document')
 
@@ -531,9 +545,7 @@ export class DefaultSudoSecureIdVerificationClient
   async captureAndVerifyIdentityDocument(
     idDocumentInfo: VerifyIdentityDocumentInput,
   ): Promise<VerifiedIdentity> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
 
     this.logger.info('Capture identity from document and verify')
 
@@ -568,9 +580,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws FatalError
    */
   async initiateIdentityDocumentCapture(): Promise<IdDocumentCaptureInitiationInfo> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
 
     this.logger.info('Initiate identity document capture')
 
@@ -598,9 +608,7 @@ export class DefaultSudoSecureIdVerificationClient
   async getIdentityDataProcessingConsentContent(
     input: IdentityDataProcessingConsentContentInput,
   ): Promise<IdentityDataProcessingConsentContent> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
     this.logger.info('Retrieving identity data processing consent content')
     // The input shape for the public API matches the GraphQL input so no explicit conversion is required
     const content =
@@ -619,9 +627,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws FatalError
    */
   async withdrawIdentityDataProcessingConsent(): Promise<IdentityDataProcessingConsentResponse> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
     this.logger.info('Withdrawing identity data processing consent')
     const response =
       await this.apiClient.withdrawIdentityDataProcessingConsent()
@@ -639,9 +645,7 @@ export class DefaultSudoSecureIdVerificationClient
    * @throws FatalError
    */
   async getIdentityDataProcessingConsentStatus(): Promise<IdentityDataProcessingConsentStatus> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
     this.logger.info('Retrieving identity data processing consent status')
     const status = await this.apiClient.getIdentityDataProcessingConsentStatus()
     return IdentityDataProcessingConsentStatusTransformer.toEntity(status)
@@ -662,14 +666,26 @@ export class DefaultSudoSecureIdVerificationClient
   async provideIdentityDataProcessingConsent(
     input: IdentityDataProcessingConsentInput,
   ): Promise<IdentityDataProcessingConsentResponse> {
-    if (!(await this.sudoUserClient.isSignedIn())) {
-      throw new NotSignedInError()
-    }
+    await this.ensureSignedIn()
     this.logger.info('Providing identity data processing consent')
     const gqlInput =
       IdentityDataProcessingConsentInputTransformer.toGraphQL(input)
     const response =
       await this.apiClient.provideIdentityDataProcessingConsent(gqlInput)
     return { processed: response.processed }
+  }
+
+  /**
+   * Checks if user is signed in and invokes callback if needed.
+   * Only performs check if callback is configured.
+   *
+   * Throws: Any error thrown by the sign-in callback
+   */
+  private async ensureSignedIn(): Promise<void> {
+    await this.signInGuard.ensureSignedIn()
+
+    if (!(await this.sudoUserClient.isSignedIn())) {
+      throw new NotSignedInError()
+    }
   }
 }

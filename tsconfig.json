@@ -6,7 +6,10 @@
     "downlevelIteration": true,
     "esModuleInterop": true,
     "importHelpers": true,
-    "lib": ["DOM", "ES2020"],
+    "lib": [
+      "DOM",
+      "ES2020"
+    ],
     "module": "ES2020",
     "moduleResolution": "node",
     "outDir": "lib",
@@ -15,8 +18,20 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES2020",
-    "typeRoots": ["./node_modules/@types", "./typings"]
+    "types": [
+      "vitest/globals"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./typings"
+    ]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "typings", "test/**"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "typings"
+  ]
 }

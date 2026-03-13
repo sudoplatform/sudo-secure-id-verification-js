@@ -4,13 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/// <reference types="vitest/globals" />
+
 /**
  * These tests currently assume execution against an IDV instance using the Platform internal
  * simulator. Some tests may not pass when run against an IDV instance using IDology in sandbox
  * mode, and all tests will likely fail against an IDV instance in production mode.
  */
 import { DefaultApiClientManager } from '@sudoplatform/sudo-api-client'
-import { DefaultConfigurationManager } from '@sudoplatform/sudo-common'
+import {
+  DefaultConfigurationManager,
+  NotSignedInError,
+} from '@sudoplatform/sudo-common'
 import { DefaultSudoEntitlementsClient } from '@sudoplatform/sudo-entitlements'
 import { DefaultSudoEntitlementsAdminClient } from '@sudoplatform/sudo-entitlements-admin'
 import {
@@ -18,7 +23,6 @@ import {
   TESTAuthenticationProvider,
 } from '@sudoplatform/sudo-user'
 import { existsSync, readFileSync } from 'fs'
-import { TextDecoder, TextEncoder } from 'util'
 import { v4 } from 'uuid'
 import {
   DefaultSudoSecureIdVerificationClient,
@@ -32,31 +36,6 @@ import {
 } from '../../src'
 import * as SimulatorDocuments from '../data/simulatorIdDocuments'
 import * as SimulatorPII from '../data/simulatorPII'
-
-global.TextEncoder = TextEncoder as typeof global.TextEncoder
-global.TextDecoder = TextDecoder as typeof global.TextDecoder
-
-// jsdom does some crypto polyfill magic but we want to use crypto.subtle so we need to add it back in
-const localCrypto = require('crypto').webcrypto // eslint-disable-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
-global.crypto = localCrypto
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-global.crypto.subtle = localCrypto.subtle // eslint-disable-line @typescript-eslint/no-unsafe-member-access
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-global.fetch = require('node-fetch')
-
-if (typeof btoa === 'undefined') {
-  global.btoa = function (b) {
-    return Buffer.from(b, 'binary').toString('base64')
-  }
-}
-
-if (typeof atob === 'undefined') {
-  global.atob = function (a) {
-    return Buffer.from(a, 'base64').toString('binary')
-  }
-}
 
 describe('SudoSecureIdVerificationClient', () => {
   const configFilePath = 'config/sudoplatformconfig.json'
@@ -121,7 +100,15 @@ describe('SudoSecureIdVerificationClient', () => {
     }, 30000)
 
     afterEach(async () => {
-      await sudoUserClient.deregister()
+      try {
+        await sudoUserClient.deregister()
+      } catch (err: unknown) {
+        // Ignore notSignedIn errors
+        if ((err as Error) instanceof NotSignedInError) {
+          await sudoUserClient.signInWithKey()
+          await sudoUserClient.deregister()
+        }
+      }
     }, 20000)
 
     /**
@@ -426,7 +413,7 @@ describe('SudoSecureIdVerificationClient', () => {
               verificationMethod: 'PII_OR_SOMETHING' as VerificationMethod,
             }),
           )
-          fail('Expected exception was not thrown.')
+          throw new Error('Expected exception was not thrown.')
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (UnknownGraphQLError) {
           // expected
@@ -554,8 +541,7 @@ describe('SudoSecureIdVerificationClient', () => {
 
         try {
           verifiedIdentity = await client.verifyIdentityDocument(idDocument)
-          fail('Expected exception was not thrown.')
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          throw new Error('Expected exception was not thrown.')
         } catch (err: unknown) {
           const error = err as Error
           expect(error.name).toBe(
@@ -665,8 +651,7 @@ describe('SudoSecureIdVerificationClient', () => {
           verifiedIdentity = await client.verifyIdentity(
             SimulatorPII.VALID_IDENTITY,
           )
-          fail('Expected exception was not thrown.')
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          throw new Error('Expected exception was not thrown.')
         } catch (err: unknown) {
           const error = err as Error
           expect(error.name).toBe('ConsentRequiredError')
@@ -721,13 +706,92 @@ describe('SudoSecureIdVerificationClient', () => {
 
         try {
           verifiedIdentity = await client.verifyIdentityDocument(idDocument)
-          fail('Expected exception was not thrown.')
+          throw new Error('Expected exception was not thrown.')
         } catch (err: unknown) {
           const error = err as Error
           expect(error.name).toBe('ConsentRequiredError')
           // expected
         }
       }, 60000)
+    })
+
+    describe('SignIn Callback', () => {
+      it('smoke_ signIn callback is invoked when user is not signed in', async () => {
+        // Sign out the user
+        await sudoUserClient.globalSignOut()
+        await expect(sudoUserClient.isSignedIn()).resolves.toEqual(false)
+
+        // Set up a callback that signs the user back in
+        let callbackInvoked = false
+        client.setSignInCallback({
+          signIn: async () => {
+            callbackInvoked = true
+            await sudoUserClient.signInWithKey()
+          },
+        })
+
+        // Call a method that requires sign-in
+        const supportedCountries = await client.listSupportedCountries()
+
+        // Verify the callback was invoked and the operation succeeded
+        expect(callbackInvoked).toBe(true)
+        expect(supportedCountries).toBeDefined()
+        expect(supportedCountries.length).toBeGreaterThan(0)
+        await expect(sudoUserClient.isSignedIn()).resolves.toEqual(true)
+      }, 20000)
+
+      it('signIn callback is not invoked when user is already signed in', async () => {
+        // Ensure user is signed in
+        await expect(sudoUserClient.isSignedIn()).resolves.toEqual(true)
+
+        // Set up a callback that should not be invoked
+        let callbackInvoked = false
+        client.setSignInCallback({
+          signIn: async () => {
+            callbackInvoked = true
+            await sudoUserClient.signInWithKey()
+          },
+        })
+
+        // Call a method that requires sign-in
+        const supportedCountries = await client.listSupportedCountries()
+
+        // Verify the callback was NOT invoked but the operation succeeded
+        expect(callbackInvoked).toBe(false)
+        expect(supportedCountries).toBeDefined()
+        expect(supportedCountries.length).toBeGreaterThan(0)
+      }, 20000)
+
+      it('operations fail when callback is not set and user is not signed in', async () => {
+        await sudoUserClient.globalSignOut()
+        await expect(sudoUserClient.isSignedIn()).resolves.toEqual(false)
+
+        // Don't set a callback
+        client.setSignInCallback(undefined)
+
+        // Attempt to call a method - should throw NotSignedInError
+        await expect(client.listSupportedCountries()).rejects.toThrow(
+          NotSignedInError,
+        )
+      }, 20000)
+
+      it('callback error is propagated to caller', async () => {
+        await sudoUserClient.globalSignOut()
+        await expect(sudoUserClient.isSignedIn()).resolves.toEqual(false)
+
+        // Set up a callback that throws an error
+        const callbackError = new Error('Sign-in not allowed')
+        client.setSignInCallback({
+          signIn: () => {
+            throw callbackError
+          },
+        })
+
+        // Attempt to call a method - should propagate the callback error
+        await expect(client.listSupportedCountries()).rejects.toThrow(
+          'Sign-in not allowed',
+        )
+      }, 20000)
     })
   } else {
     it('Skip all tests.', () => {

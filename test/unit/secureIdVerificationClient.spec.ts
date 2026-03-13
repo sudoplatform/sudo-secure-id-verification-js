@@ -30,7 +30,7 @@ import {
 } from '@sudoplatform/sudo-common'
 import * as SimulatorPII from '../data/simulatorPII'
 import * as SimulatorDocuments from '../data/simulatorIdDocuments'
-import { SudoUserClient } from '@sudoplatform/sudo-user'
+import { SignInGuard, SudoUserClient } from '@sudoplatform/sudo-user'
 import { VerifyIdentityDocumentInputTransformer } from '../../src/private/transformers/verifyIdentityDocumentInputTransformer'
 import { SudoSecureIdVerificationClientPrivateOptions } from '../../src/private/privateOptions'
 import { VerifyIdentityInputTransformer } from '../../src/private/transformers/verifyIdentityInputTransformer'
@@ -40,6 +40,8 @@ describe('SudoSecureIdVerificationClient', () => {
   const sudoUserClient = instance(sudoUserClientMock)
   const apiClientMock = mock<ApiClient>()
   const apiClient = instance(apiClientMock)
+  const signInGuardMock = mock<SignInGuard>()
+  const signInGuard = instance(signInGuardMock)
 
   const config = {
     region: '',
@@ -51,6 +53,7 @@ describe('SudoSecureIdVerificationClient', () => {
   const clientOptions: SudoSecureIdVerificationClientPrivateOptions = {
     sudoUserClient,
     apiClient,
+    signInGuard,
     identityVerificationServiceConfig: {},
   }
 
@@ -60,9 +63,11 @@ describe('SudoSecureIdVerificationClient', () => {
   beforeEach(async () => {
     reset(sudoUserClientMock)
     reset(apiClientMock)
+    reset(signInGuardMock)
     await client.reset()
 
     when(sudoUserClientMock.isSignedIn()).thenResolve(true)
+    when(signInGuardMock.ensureSignedIn()).thenResolve()
   })
 
   afterEach(async () => {
@@ -80,7 +85,7 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(
         () => new DefaultSudoSecureIdVerificationClient(clientOptions),
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Configuration set not found. Key: IdentityVerificationService"`,
+        `[ConfigurationSetNotFoundError: Configuration set not found. Key: IdentityVerificationService]`,
       )
     })
   })
@@ -91,6 +96,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(client.listSupportedCountries()).rejects.toEqual(
         new NotSignedInError(),
       )
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('returns successfully', async () => {
@@ -115,6 +121,7 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(supportedCountries[0]).toEqual('US')
 
       verify(apiClientMock.getCapabilities()).twice()
+      verify(signInGuardMock.ensureSignedIn()).twice()
     })
   })
 
@@ -124,6 +131,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(
         client.isFaceImageRequiredWithDocumentVerification(),
       ).rejects.toEqual(new NotSignedInError())
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('returns successfully', async () => {
@@ -144,6 +152,8 @@ describe('SudoSecureIdVerificationClient', () => {
       isFaceImageRequiredWithDocumentVerification =
         await client.isFaceImageRequiredWithDocumentVerification()
       expect(isFaceImageRequiredWithDocumentVerification).toBeFalsy()
+
+      verify(signInGuardMock.ensureSignedIn()).twice()
     })
   })
 
@@ -153,6 +163,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(
         client.isFaceImageRequiredWithDocumentCapture(),
       ).rejects.toEqual(new NotSignedInError())
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('returns successfully', async () => {
@@ -173,6 +184,8 @@ describe('SudoSecureIdVerificationClient', () => {
       isFaceImageRequiredWithDocumentCapture =
         await client.isFaceImageRequiredWithDocumentCapture()
       expect(isFaceImageRequiredWithDocumentCapture).toBeFalsy()
+
+      verify(signInGuardMock.ensureSignedIn()).twice()
     })
   })
 
@@ -182,6 +195,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(client.isDocumentCaptureInitiationEnabled()).rejects.toEqual(
         new NotSignedInError(),
       )
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('returns successfully', async () => {
@@ -202,6 +216,8 @@ describe('SudoSecureIdVerificationClient', () => {
       canInitiateDocumentCapture =
         await client.isDocumentCaptureInitiationEnabled()
       expect(canInitiateDocumentCapture).toBeTruthy()
+
+      verify(signInGuardMock.ensureSignedIn()).twice()
     })
   })
 
@@ -211,6 +227,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(client.checkIdentityVerification()).rejects.toEqual(
         new NotSignedInError(),
       )
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('returns successfully with default query option', async () => {
@@ -245,6 +262,7 @@ describe('SudoSecureIdVerificationClient', () => {
       })
 
       verify(apiClientMock.checkIdentityVerification()).once()
+      verify(signInGuardMock.ensureSignedIn()).once()
       const [actualQuery] = capture(
         apiClientMock.checkIdentityVerification,
       ).first()
@@ -283,6 +301,7 @@ describe('SudoSecureIdVerificationClient', () => {
       })
 
       verify(apiClientMock.checkIdentityVerification()).once()
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
   })
 
@@ -292,6 +311,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(
         client.verifyIdentity(SimulatorPII.VALID_IDENTITY),
       ).rejects.toEqual(new NotSignedInError())
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('throws IllegalArgumentError if unsupported verification method specified', async () => {
@@ -340,6 +360,7 @@ describe('SudoSecureIdVerificationClient', () => {
       })
 
       verify(apiClientMock.verifyIdentity(anything())).once()
+      verify(signInGuardMock.ensureSignedIn()).once()
       const [actualInput] = capture(apiClientMock.verifyIdentity).first()
       expect(actualInput).toEqual(
         VerifyIdentityInputTransformer.toGraphQL(SimulatorPII.VALID_IDENTITY),
@@ -364,6 +385,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(client.verifyIdentityDocument(idDocument)).rejects.toEqual(
         new NotSignedInError(),
       )
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('throws IllegalArgumentError if unsupported verification method specified', async () => {
@@ -409,6 +431,7 @@ describe('SudoSecureIdVerificationClient', () => {
       })
 
       verify(apiClientMock.verifyIdentityDocument(anything())).once()
+      verify(signInGuardMock.ensureSignedIn()).once()
       const [actualInput] = capture(
         apiClientMock.verifyIdentityDocument,
       ).first()
@@ -460,6 +483,7 @@ describe('SudoSecureIdVerificationClient', () => {
       })
 
       verify(apiClientMock.verifyIdentityDocument(anything())).once()
+      verify(signInGuardMock.ensureSignedIn()).once()
       const [actualInput] = capture(
         apiClientMock.verifyIdentityDocument,
       ).first()
@@ -475,6 +499,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(client.initiateIdentityDocumentCapture()).rejects.toEqual(
         new NotSignedInError(),
       )
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('returns successfully', async () => {
@@ -496,6 +521,8 @@ describe('SudoSecureIdVerificationClient', () => {
       expect(
         identityDocumentCaptureInitiationInfo.expiryAtEpochSeconds,
       ).toBeLessThan(Date.now() / 1000)
+
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
   })
 
@@ -508,6 +535,7 @@ describe('SudoSecureIdVerificationClient', () => {
           preferredLanguage: 'en-US',
         }),
       ).rejects.toEqual(new NotSignedInError())
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('returns successfully', async () => {
@@ -530,6 +558,7 @@ describe('SudoSecureIdVerificationClient', () => {
       verify(
         apiClientMock.getIdentityDataProcessingConsentContent(anything()),
       ).once()
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
   })
 
@@ -539,6 +568,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(
         client.getIdentityDataProcessingConsentStatus(),
       ).rejects.toEqual(new NotSignedInError())
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('returns successfully', async () => {
@@ -560,6 +590,7 @@ describe('SudoSecureIdVerificationClient', () => {
         language: 'en-US',
       })
       verify(apiClientMock.getIdentityDataProcessingConsentStatus()).once()
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
   })
 
@@ -573,6 +604,7 @@ describe('SudoSecureIdVerificationClient', () => {
           language: 'en-US',
         }),
       ).rejects.toEqual(new NotSignedInError())
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('returns successfully and transforms input', async () => {
@@ -590,6 +622,7 @@ describe('SudoSecureIdVerificationClient', () => {
       verify(
         apiClientMock.provideIdentityDataProcessingConsent(anything()),
       ).once()
+      verify(signInGuardMock.ensureSignedIn()).once()
 
       const [arg1] = capture(
         apiClientMock.provideIdentityDataProcessingConsent,
@@ -608,6 +641,7 @@ describe('SudoSecureIdVerificationClient', () => {
       await expect(
         client.withdrawIdentityDataProcessingConsent(),
       ).rejects.toEqual(new NotSignedInError())
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
 
     it('returns successfully', async () => {
@@ -617,6 +651,7 @@ describe('SudoSecureIdVerificationClient', () => {
       const result = await client.withdrawIdentityDataProcessingConsent()
       expect(result).toEqual({ processed: true })
       verify(apiClientMock.withdrawIdentityDataProcessingConsent()).once()
+      verify(signInGuardMock.ensureSignedIn()).once()
     })
   })
 })

@@ -1,9 +1,17 @@
 {
   "extends": "./tsconfig.commonjs.json",
+  "compilerOptions": {
+    "types": [
+      "vitest/globals"
+    ]
+  },
   "include": [
-    "src/**/*.ts", 
-    "test/**/*.ts", 
+    "src/**/*.ts",
+    "test/**/*.ts",
     "test/**/*.spec.ts"
   ],
-  "exclude": ["node_modules", "typings"]
+  "exclude": [
+    "node_modules",
+    "typings"
+  ]
 }

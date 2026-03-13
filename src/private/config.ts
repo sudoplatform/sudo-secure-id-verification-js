@@ -9,7 +9,6 @@ import * as t from 'io-ts'
 
 const IdentityVerificationServiceConfigProps = {}
 export const configNamespace = 'IdentityVerificationService'
-// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 const IdentityVerificationServiceConfigCodec = t.type(
   IdentityVerificationServiceConfigProps,
 )
